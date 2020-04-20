@@ -1,4 +1,4 @@
-FROM osrf/ros:kinetic-desktop-full
+FROM osrf/ros:melodic-desktop-full
 
 RUN apt-get update && apt-get install -y \
     vim \
@@ -6,5 +6,5 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-pcl-conversions \
     ros-${ROS_DISTRO}-pcl-ros \
     && rm -rf /var/lib/apt/lists/* && \
-    echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc && \
+    echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "source /catkin_ws/devel/setup.bash" >> ~/.bashrc
