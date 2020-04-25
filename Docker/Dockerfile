@@ -1,4 +1,4 @@
-FROM osrf/ros:melodic-desktop-full
+FROM osrf/ros:kinetic-desktop-full
 
 RUN apt-get update && apt-get install -y \
     vim \
