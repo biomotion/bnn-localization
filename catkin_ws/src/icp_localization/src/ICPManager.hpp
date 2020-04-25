@@ -9,7 +9,10 @@
 #include <iostream>
 
 using namespace pcl;
-class ICPEstimator{
+
+#ifndef ICP_MANAGER_H
+#define ICP_MANAGER_H
+class ICPManager{
 private:
     // ROS stuffs
     ros::NodeHandle n;
@@ -36,10 +39,10 @@ private:
 
     }
 public:
-    ICPEstimator();
-    ICPEstimator(ros::NodeHandle nh, std::string map_file){
+    ICPManager();
+    ICPManager(ros::NodeHandle nh, std::string map_file){
         this->n = nh;
-        this->sub_pc = n.subscribe("/velodyne_points", 1, &ICPEstimator::pc_callback, this);
+        this->sub_pc = n.subscribe("/velodyne_points", 1, &ICPManager::pc_callback, this);
         this->pub_pose = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1);
         this->map_cloud = new pcl::PointCloud<pcl::PointXYZ>;
         if(pcl::io::loadPCDFile (map_file, *map_cloud) < 0){
@@ -52,3 +55,5 @@ public:
         this->icp.setMaximumIterations(100);
     }
 };
+
+#endif
