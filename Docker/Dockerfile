@@ -13,3 +13,16 @@ RUN apt-get update && apt-get install -y \
 # RUN rm /usr/include/flann/ext/lz4.h /usr/include/flann/ext/lz4hc.h && \
 #     ln -s /usr/include/lz4.h /usr/include/flann/ext/lz4.h && \
 #     ln -s /usr/include/lz4hc.h /usr/include/flann/ext/lz4hc.h
+
+# ENV PCL_VERSION 1.8.0
+# WORKDIR /tmp
+# RUN wget https://github.com/PointCloudLibrary/pcl/archive/pcl-${PCL_VERSION}.tar.gz&& \
+#     tar -zxvf pcl-${PCL_VERSION}.tar.gz && rm pcl-${PCL_VERSION}.tar.gz && \
+#     mv pcl-pcl-${PCL_VERSION} pcl && \
+#     mkdir -p pcl/build && cd pcl/build && \
+#     cmake -DCMAKE_BUILD_TYPE=Release .. && make && \
+#     make install
+
+# RUN apt-get update && \
+#     apt-get install -y \
+#     libpcl-all
