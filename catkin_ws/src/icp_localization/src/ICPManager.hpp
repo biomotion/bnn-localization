@@ -14,46 +14,19 @@ using namespace pcl;
 #define ICP_MANAGER_H
 class ICPManager{
 private:
-    // ROS stuffs
-    ros::NodeHandle n;
-    ros::Subscriber sub_pc;
-    ros::Publisher pub_pose;
-
+    Eigen::Matrix4f pose, guess;
     // PCL stuffs
     pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
     pcl::PointCloud<pcl::PointXYZ>* map_cloud;
-    void pc_callback(const sensor_msgs::PointCloud2ConstPtr& input_msg){
-        pcl::PointCloud<pcl::PointXYZ>* input_cloud = new PointCloud<pcl::PointXYZ>;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(input_cloud);
-        pcl::PointCloud<pcl::PointXYZ>::Ptr map_ptr(map_cloud);
-        pcl::PointCloud<pcl::PointXYZ> final_cloud;
-        pcl::fromROSMsg(*input_msg, *input_cloud);
-
-        icp.setInputSource(input_ptr);
-        icp.setInputTarget(map_ptr);
-
-        icp.align(final_cloud);
-        std::cout << "has converged: " << icp.hasConverged() <<std::endl;
-        std::cout << "score: " <<icp.getFitnessScore() << std::endl; 
-        std::cout << icp.getFinalTransformation() << std::endl;
-
-    }
 public:
     ICPManager();
-    ICPManager(ros::NodeHandle nh, std::string map_file){
-        this->n = nh;
-        this->sub_pc = n.subscribe("/velodyne_points", 1, &ICPManager::pc_callback, this);
-        this->pub_pose = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose", 1);
-        this->map_cloud = new pcl::PointCloud<pcl::PointXYZ>;
-        if(pcl::io::loadPCDFile (map_file, *map_cloud) < 0){
-            ROS_ERROR("map file not found");
-            PCL_ERROR("Couldn't read file %s\n", map_file);
-        }
-        this->icp.setMaxCorrespondenceDistance(100);
-        this->icp.setTransformationEpsilon(1e-10);
-        this->icp.setEuclideanFitnessEpsilon(0.001);
-        this->icp.setMaximumIterations(100);
-    }
+    ICPManager(char const * map_file);
+    void loadMap(std::string);
+    void feedPC(pcl::PointCloud<pcl::PointXYZ>&);
+    // void feedPC(pcl::PointCloud<pcl::PointXYZ>, Eigen::Matrix4d); //feed point cloud with guess
+    void setGuess(Eigen::Matrix4f g) { this->guess = g; }
+    Eigen::Matrix4f getPose() { return this->pose; }
+
 };
 
 #endif

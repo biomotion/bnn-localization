@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(icp_localization)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -46,13 +46,16 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+  src
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/icp_localization.cpp
-# )
+add_library(icp_manager SHARED
+  src/ICPManager.cpp
+)
+target_link_libraries(icp_manager ${catkin_LIBRARIES})
+target_include_directories(icp_manager PUBLIC src)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -79,5 +82,8 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(test src/localize_node.cpp)
-target_link_libraries(test ${catkin_LIBRARIES} )
+add_executable(subscribe_icp src/ros_subscribe_icp.cpp)
+target_link_libraries(subscribe_icp icp_manager ${catkin_LIBRARIES} )
+
+add_executable(serial_icp src/ros_serial_icp.cpp)
+target_link_libraries(serial_icp icp_manager ${catkin_LIBRARIES})
