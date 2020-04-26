@@ -9,7 +9,7 @@
 #include <pcl/filters/voxel_grid.h>
 
 #include"ICPManager.hpp"
-
+// Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
 using namespace std;
 int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
@@ -29,12 +29,13 @@ int main(int argc, char** argv){
 
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
-        cout << msg.getTopic() << endl;
-
         static Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
+        cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
+        // cout << msg.getDataType() << endl;
+        // cout << tf << endl;
 
-        if(true){
-            // ROS_WARN("Not initialized");
+        if(tf.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity())){
+            ROS_WARN("Not initialized");
             sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
             if(imu != nullptr){
                 Eigen::Quaternionf rot(imu->orientation.w,
@@ -43,18 +44,18 @@ int main(int argc, char** argv){
                                         imu->orientation.z);
                 tf.topLeftCorner(3, 3) = rot.toRotationMatrix();
                 manager.setGuess(tf);
-                cout << "guess\n" << tf << endl;
+                cout << "guess rotation\n" << tf.topLeftCorner(3, 3) << endl;
                 
             }
-
-            geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();
+        }
+        if(tf.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero())){
+            geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();;
             if(gps != nullptr){
                 tf.topRightCorner(3, 1) << gps->point.x,
                                             gps->point.y,
                                             gps->point.z;
                 manager.setGuess(tf);
-                cout << "guess\n" << tf << endl;
-                // ROS_INFO("GOT GPS");
+                cout << "guess translation\n" << tf.topRightCorner(3, 1) << endl;
             }
         }
         
@@ -65,16 +66,17 @@ int main(int argc, char** argv){
             pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
             pcl::fromROSMsg(*pc, *input_cloud);
 
-            pcl::VoxelGrid<pcl::PointXYZ> sor;
-            sor.setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr(input_cloud));
-            sor.setLeafSize (0.2f, 0.2f, 0.2f);
-            sor.filter (cloud_filtered);
+            // pcl::VoxelGrid<pcl::PointXYZ> sor;
+            // sor.setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr(input_cloud));
+            // sor.setLeafSize (0.2f, 0.2f, 0.2f);
+            // sor.filter (cloud_filtered);
+            // manager.feedPC(cloud_filtered);
 
-            manager.feedPC(cloud_filtered);
+            manager.feedPC(*input_cloud);
             tf = manager.getPose();
         }
 
-        
+        ros::Duration(0.1).sleep();
 
     }
 
