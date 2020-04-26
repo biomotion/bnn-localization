@@ -8,3 +8,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "source /catkin_ws/devel/setup.bash" >> ~/.bashrc
+
+# when you use melodic, uncomment this to avoid confliction
+# RUN rm /usr/include/flann/ext/lz4.h /usr/include/flann/ext/lz4hc.h && \
+#     ln -s /usr/include/lz4.h /usr/include/flann/ext/lz4.h && \
+#     ln -s /usr/include/lz4hc.h /usr/include/flann/ext/lz4hc.h
