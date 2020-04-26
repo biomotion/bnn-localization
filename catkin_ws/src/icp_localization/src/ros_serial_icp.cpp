@@ -6,6 +6,8 @@
 #include <sensor_msgs/Imu.h>
 #include <geometry_msgs/PointStamped.h>
 
+#include <pcl/filters/voxel_grid.h>
+
 #include"ICPManager.hpp"
 
 using namespace std;
@@ -32,7 +34,7 @@ int main(int argc, char** argv){
         static Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
 
         if(true){
-            ROS_WARN("Not initialized");
+            // ROS_WARN("Not initialized");
             sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
             if(imu != nullptr){
                 Eigen::Quaternionf rot(imu->orientation.w,
@@ -40,8 +42,8 @@ int main(int argc, char** argv){
                                         imu->orientation.y,
                                         imu->orientation.z);
                 tf.topLeftCorner(3, 3) = rot.toRotationMatrix();
-                cout << "imu: \n";
-                cout <<  tf.topLeftCorner(3, 3) << endl;
+                manager.setGuess(tf);
+                cout << "guess\n" << tf << endl;
                 
             }
 
@@ -60,8 +62,15 @@ int main(int argc, char** argv){
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
             pcl::PointCloud<pcl::PointXYZ>* input_cloud = new PointCloud<pcl::PointXYZ>;
+            pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
             pcl::fromROSMsg(*pc, *input_cloud);
-            manager.feedPC(*input_cloud);
+
+            pcl::VoxelGrid<pcl::PointXYZ> sor;
+            sor.setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr(input_cloud));
+            sor.setLeafSize (0.2f, 0.2f, 0.2f);
+            sor.filter (cloud_filtered);
+
+            manager.feedPC(cloud_filtered);
             tf = manager.getPose();
         }
 

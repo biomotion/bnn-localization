@@ -46,12 +46,12 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
         PCL_WARN("Dropping this frame\n");
         return;
     }
-        
+    std::cout << "has converge: " << icp.hasConverged() << std::endl; 
     if(icp.hasConverged()){
-        pose = icp.getFinalTransformation();
-        PCL_INFO("Pose updated");
         std::cout << "score: " << icp.getFitnessScore() << std::endl; 
         std::cout << icp.getFinalTransformation() << std::endl;
+        pose = icp.getFinalTransformation();
+        PCL_INFO("Pose updated\n");
     }
 }
 
