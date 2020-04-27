@@ -50,10 +50,12 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
         icp.setInputTarget(pcl::PointCloud<pcl::PointXYZ>::Ptr(map_cloud));
     else{
         Eigen::Vector3f point = gs.topRightCorner(3, 1);
-        std::cout << selectMapRange(point(0), point(1), point(2), 10, 10, 10)->width << std::endl;
-        icp.setInputTarget(this->selectMapRange(point(0), point(1), point(2), 10, 10, 10));
+        // std::cout << selectMapRange(point(0), point(1), point(2), 10, 10, 10)->width << std::endl;
+        pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
+        this->selectMapRange(point(0), point(1), point(2), 30, 30, 30, inputTarget);
+        icp.setInputTarget(inputTarget);
     }
-
+    std::cout << "aligning..." << std::endl ;
     icp.align(final_cloud, gs);
 
     std::cout << "has converge: " << icp.hasConverged() << std::endl; 
@@ -65,11 +67,10 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
     }
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr ICPManager::selectMapRange(float x_center, float y_center, float z_center, float x_length, float y_length, float z_length){
+void ICPManager::selectMapRange(float x_center, float y_center, float z_center, float x_length, float y_length, float z_length, pcl::PointCloud<PointXYZ>::Ptr& result){
     pcl::PassThrough<pcl::PointXYZ> pass;
     pcl::PointCloud<pcl::PointXYZ>::Ptr _x_filted(new pcl::PointCloud<pcl::PointXYZ>), 
-                                        _y_filted(new pcl::PointCloud<pcl::PointXYZ>),
-                                        _z_filted(new pcl::PointCloud<pcl::PointXYZ>);
+                                        _y_filted(new pcl::PointCloud<pcl::PointXYZ>);
 
     std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
     // filtering X axis
@@ -91,9 +92,9 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr ICPManager::selectMapRange(float x_center, f
     pass.setInputCloud(_y_filted);
     pass.setFilterFieldName("z");
     pass.setFilterLimits(z_center - z_length/2, z_center + z_length/2);
-    pass.filter(*_z_filted);
+    pass.filter(*result);
     // std::cout << "z done" << std::endl;
     std::cout << "all done" << std::endl;
-    return _z_filted;
+    return;
 
 }
