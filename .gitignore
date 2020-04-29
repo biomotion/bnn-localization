@@ -5,4 +5,8 @@ build/
 *.pyc
 .vscode/
 *.zip
+# map
 *.pcd
+
+# Ground truth
+*.csv
