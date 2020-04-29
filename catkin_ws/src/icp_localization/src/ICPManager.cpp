@@ -11,7 +11,7 @@ ICPManager::ICPManager(char const * map_file):pose(Eigen::Matrix4f::Identity()),
     if(pcl::io::loadPCDFile (map_file, *map_cloud) < 0){
         PCL_ERROR("Couldn't read file %s\n", map_file);
     }
-    this->icp.setMaxCorrespondenceDistance(100);
+    this->icp.setMaxCorrespondenceDistance(10);
     this->icp.setTransformationEpsilon(1e-10);
     this->icp.setEuclideanFitnessEpsilon(0.001);
     this->icp.setMaximumIterations(100);   

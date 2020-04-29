@@ -38,6 +38,12 @@ public:
         std::cout << "guess position\n" << posi << std::endl;
     }
     Eigen::Matrix4f getPose() { return this->pose; }
+    void setParams(double max_d, double tf_esln, double fit_esln, uint16_t max_iter){
+        this->icp.setMaxCorrespondenceDistance(max_d);
+        this->icp.setTransformationEpsilon(tf_esln);
+        this->icp.setEuclideanFitnessEpsilon(fit_esln);
+        this->icp.setMaximumIterations(max_iter);
+    }
 
 };
 

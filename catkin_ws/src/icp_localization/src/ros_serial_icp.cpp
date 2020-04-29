@@ -20,10 +20,21 @@ int main(int argc, char** argv){
     rosbag::Bag bag;
     rosbag::View view;
     std::string bag_file;
+    double max_dist=10, tf_epsilon=1e-10, fit_epsilon=0.001;
+    int max_iter=100;
 
     ICPManager manager("/bags/itri/map.pcd");
     
     n.param<std::string>("bag_file", bag_file, "/bags/itri/ITRI_Public.bag");
+    n.param<int>("max_iter", max_iter, (int)100);
+    n.param<double>("max_distance", max_dist, 10);
+    n.param<double>("transform_epsilon", tf_epsilon, 1e-10);
+    n.param<double>("fitness_epsilon", fit_epsilon, 0.001);
+    cout << max_iter << endl
+        << max_dist << endl
+        << tf_epsilon << endl
+        << fit_epsilon << endl;
+    manager.setParams(max_dist, tf_epsilon, fit_epsilon, max_iter);
     bag.open(bag_file, rosbag::bagmode::Read);
     view.addQuery(bag);
 
