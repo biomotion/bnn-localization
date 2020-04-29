@@ -29,11 +29,13 @@ public:
         if(this->guess.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero()))
             this->guess = this->pose;
         this->guess.topLeftCorner(3, 3) = orien;
+        std::cout << "guess orientation\n" << orien << std::endl;
     }
     void guessPosition(Eigen::Vector3f posi){
         if(this->guess.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity()))
             this->guess = this->pose;
         this->guess.topRightCorner(3, 1) = posi;
+        std::cout << "guess position\n" << posi << std::endl;
     }
     Eigen::Matrix4f getPose() { return this->pose; }
 
