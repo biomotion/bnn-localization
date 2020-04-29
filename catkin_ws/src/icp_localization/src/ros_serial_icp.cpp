@@ -63,6 +63,7 @@ int main(int argc, char** argv){
                         // tf_imu_to_lidar.topRightCorner(3, 1) << tf.transform.translation.x,
                         //                                         tf.transform.translation.y,
                         //                                         tf.transform.translation.z;
+                        if(!pose.isApprox(Eigen::Matrix4f::Identity())) continue;
                         changed_imu = rot_imu_to_lidar * staged_imu.toRotationMatrix();
                         manager.guessOrientation(changed_imu);
 
@@ -94,11 +95,18 @@ int main(int argc, char** argv){
         //handle point cloud topic
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
-            pcl::PointCloud<pcl::PointXYZ>* input_cloud = new PointCloud<pcl::PointXYZ>;
+            pcl::PointCloud<pcl::PointXYZ>* input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::VoxelGrid<pcl::PointXYZ> sor;
+            pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new PointCloud<PointXYZ>);
             pcl::fromROSMsg(*pc, *input_cloud);
 
 
-            manager.feedPC(*input_cloud);
+            sor.setInputCloud(PointCloud<PointXYZ>::Ptr(input_cloud));
+            sor.setLeafSize(0.8f, 0.8f, 0.8f);
+            sor.filter(*filtered_cloud);
+            manager.feedPC(filtered_cloud);
+
+            // manager.feedPC(*input_cloud);
             pose = manager.getPose();
 
             geometry_msgs::PoseStamped pose_msg;

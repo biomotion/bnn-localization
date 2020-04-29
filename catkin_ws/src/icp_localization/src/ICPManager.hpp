@@ -21,7 +21,7 @@ public:
     ICPManager();
     ICPManager(char const * map_file);
     void loadMap(std::string);
-    void feedPC(pcl::PointCloud<pcl::PointXYZ>&);
+    void feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr&);
     // void feedPC(pcl::PointCloud<pcl::PointXYZ>, Eigen::Matrix4d); //feed point cloud with guess
     void guessTF(Eigen::Matrix4f g) { this->guess = g; }
     void guessOrientation(Eigen::Quaternionf q) { guessOrientation(q.toRotationMatrix()); } // guess orientation by quaternion
