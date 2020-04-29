@@ -25,12 +25,12 @@ void ICPManager::loadMap(std::string map_file){
     return;
 }
 
-void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(&input_cloud);
+void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(&input_cloud);
     pcl::PointCloud<pcl::PointXYZ> final_cloud;
     Eigen::Matrix4f gs;
 
-    icp.setInputSource(input_ptr);
+    icp.setInputSource(input_cloud);
     
 
     if(! guess.isApprox(Eigen::Matrix4f::Identity())){
