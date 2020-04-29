@@ -48,9 +48,8 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
         icp.setInputTarget(map_cloud);
     else{
         Eigen::Vector3f point = gs.topRightCorner(3, 1);
-        // std::cout << selectMapRange(point(0), point(1), point(2), 10, 10, 10)->width << std::endl;
         pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
-        this->selectMapRange(point(0), point(1), point(2), 20, 20, 20, inputTarget);
+        this->selectMapRange(point(0), point(1), point(2), 50, 50, 50, inputTarget);
         icp.setInputTarget(inputTarget);
     }
     std::cout << "aligning..." << std::endl;
