@@ -15,7 +15,7 @@ private:
     Eigen::Matrix4f pose, guess;
     // PCL stuffs
     pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
-    pcl::PointCloud<pcl::PointXYZ>* map_cloud;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr map_cloud;
     void selectMapRange(float, float, float, float, float, float, pcl::PointCloud<PointXYZ>::Ptr&);
 public:
     ICPManager();

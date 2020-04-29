@@ -5,8 +5,9 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Imu.h>
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 
-#include <pcl/filters/voxel_grid.h>
+// #include <pcl/filters/voxel_grid.h>
 
 #include"ICPManager.hpp"
 // Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
@@ -14,6 +15,7 @@ using namespace std;
 int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
     ros::NodeHandle n;
+    ros::Publisher pub_pose = n.advertise<geometry_msgs::PoseStamped>("/car_pose", 1);
 
     ICPManager manager("/bags/itri/map.pcd");
 
@@ -35,7 +37,6 @@ int main(int argc, char** argv){
         // cout << tf << endl;
 
         if(tf.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity())){
-            ROS_WARN("Not initialized");
             sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
             if(imu != nullptr){
                 Eigen::Quaternionf rot(imu->orientation.w,
@@ -74,9 +75,24 @@ int main(int argc, char** argv){
 
             manager.feedPC(*input_cloud);
             tf = manager.getPose();
+
+            geometry_msgs::PoseStamped pose;
+            Eigen::Matrix3f rot_matrix = tf.topLeftCorner(3, 3);
+            Eigen::Quaternionf rot(rot_matrix);
+            Eigen::Vector3f trans = tf.topRightCorner(3, 1);
+            pose.header.frame_id = "map";
+            pose.header.stamp = pc->header.stamp;
+            pose.pose.orientation.w = rot.w();
+            pose.pose.orientation.x = rot.x();
+            pose.pose.orientation.y = rot.y();
+            pose.pose.orientation.z = rot.z();
+            pose.pose.position.x = trans.x();
+            pose.pose.position.y = trans.y();
+            pose.pose.position.z = trans.z();
+            pub_pose.publish(pose);
+
         }
 
-        ros::Duration(0.1).sleep();
 
     }
 

@@ -1,26 +1,24 @@
 #include"ICPManager.hpp"
 using namespace pcl;
-// ICPManager::ICPManager():pose(Eigen::Matrix4f::Identity()), guess(Eigen::Matrix4f::Identity()){
-//     this->icp.setMaxCorrespondenceDistance(0.05);
-//     this->icp.setTransformationEpsilon(1e-10);
-//     this->icp.setEuclideanFitnessEpsilon(0.01);
-//     this->icp.setMaximumIterations(100);   
-// }
+ICPManager::ICPManager():pose(Eigen::Matrix4f::Identity()), guess(Eigen::Matrix4f::Identity()), map_cloud(new pcl::PointCloud<pcl::PointXYZ>){
+    // this->icp.setMaxCorrespondenceDistance(0.05);
+    // this->icp.setTransformationEpsilon(1e-10);
+    // this->icp.setEuclideanFitnessEpsilon(0.01);
+    // this->icp.setMaximumIterations(100);   
+}
 
-ICPManager::ICPManager(char const * map_file):pose(Eigen::Matrix4f::Identity()), guess(Eigen::Matrix4f::Identity()){
-    this->map_cloud = new pcl::PointCloud<pcl::PointXYZ>;
+ICPManager::ICPManager(char const * map_file):pose(Eigen::Matrix4f::Identity()), guess(Eigen::Matrix4f::Identity()), map_cloud(new pcl::PointCloud<pcl::PointXYZ>){
     if(pcl::io::loadPCDFile (map_file, *map_cloud) < 0){
         PCL_ERROR("Couldn't read file %s\n", map_file);
     }
-    this->icp.setMaxCorrespondenceDistance(0.05);
-    this->icp.setTransformationEpsilon(1e-5);
-    this->icp.setEuclideanFitnessEpsilon(0.01);
-    this->icp.setMaximumIterations(10);   
+    // this->icp.setMaxCorrespondenceDistance(0.05);
+    // this->icp.setTransformationEpsilon(1e-5);
+    // this->icp.setEuclideanFitnessEpsilon(0.01);
+    // this->icp.setMaximumIterations(10);   
 }
 
 
 void ICPManager::loadMap(std::string map_file){
-    this->map_cloud = new pcl::PointCloud<pcl::PointXYZ>;
     if(pcl::io::loadPCDFile (map_file, *map_cloud) < 0){
         PCL_ERROR("Couldn't read file %s\n", map_file);
     }
@@ -52,7 +50,7 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
         Eigen::Vector3f point = gs.topRightCorner(3, 1);
         // std::cout << selectMapRange(point(0), point(1), point(2), 10, 10, 10)->width << std::endl;
         pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
-        this->selectMapRange(point(0), point(1), point(2), 30, 30, 30, inputTarget);
+        this->selectMapRange(point(0), point(1), point(2), 20, 20, 20, inputTarget);
         icp.setInputTarget(inputTarget);
     }
     std::cout << "aligning..." << std::endl ;
@@ -94,7 +92,8 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     pass.setFilterLimits(z_center - z_length/2, z_center + z_length/2);
     pass.filter(*result);
     // std::cout << "z done" << std::endl;
-    std::cout << "all done" << std::endl;
+    std::cout << "passthough done" << std::endl;
+    std::cout << result->width << std::endl;
     return;
 
 }
