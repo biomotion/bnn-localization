@@ -6,6 +6,8 @@
 #include <sensor_msgs/Imu.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_msgs/TFMessage.h>
 
 
 #include"ICPManager.hpp"
@@ -28,21 +30,45 @@ int main(int argc, char** argv){
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
         static Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
+        static Eigen::Quaternionf staged_imu = Eigen::Quaternionf::Identity();
+
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
 
 
-        if(true){
+            tf2_msgs::TFMessage::ConstPtr tf_msg = msg.instantiate<tf2_msgs::TFMessage>();
+            if(tf_msg != nullptr){
+                for(geometry_msgs::TransformStamped tf : tf_msg->transforms ){
+                    if(tf.header.frame_id=="base_link" && tf.child_frame_id=="velodyne"){
+                        Eigen::Matrix3f rot_imu_to_lidar;
+                        Eigen::Matrix3f changed_imu;
+                        // cout << "update tf imu" << endl;
+                        cout << "base_link to velodyne" << endl;
+                        // cout << tf.transform << endl;
+                        rot_imu_to_lidar = Eigen::Quaternionf(tf.transform.rotation.w,
+                                                            tf.transform.rotation.x,
+                                                            tf.transform.rotation.y,
+                                                            tf.transform.rotation.z).toRotationMatrix();
+                        // tf_imu_to_lidar.topRightCorner(3, 1) << tf.transform.translation.x,
+                        //                                         tf.transform.translation.y,
+                        //                                         tf.transform.translation.z;
+                        changed_imu = rot_imu_to_lidar * staged_imu.toRotationMatrix();
+                        manager.guessOrientation(changed_imu);
+
+                    }
+                }
+            }
+
             sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
             if(imu != nullptr){
+                // always ipdate imu orientation
                 Eigen::Quaternionf rot(imu->orientation.w,
                                         imu->orientation.x,
                                         imu->orientation.y,
                                         imu->orientation.z);
-                manager.guessOrientation(rot);
-                cout << "guess orientation\n" << rot.toRotationMatrix() << endl;
-                
+                staged_imu = rot;
             }
-        }
+
+
         if(pose.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero())){
             geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();;
             if(gps != nullptr){
@@ -50,7 +76,6 @@ int main(int argc, char** argv){
                                     gps->point.y,
                                     gps->point.z);
                 manager.guessPosition(trans);
-                cout << "guess position\n" << trans << endl;
             }
         }
         
