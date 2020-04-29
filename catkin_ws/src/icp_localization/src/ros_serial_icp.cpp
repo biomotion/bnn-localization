@@ -15,15 +15,16 @@
 using namespace std;
 int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
-    ros::NodeHandle n;
+    ros::NodeHandle n("~");
     ros::Publisher pub_pose = n.advertise<geometry_msgs::PoseStamped>("/car_pose", 1);
     rosbag::Bag bag;
     rosbag::View view;
-    std::string bag_file;
+    std::string bag_file, map_file;
     double max_dist=10, tf_epsilon=1e-10, fit_epsilon=0.001;
     int max_iter=100;
 
-    ICPManager manager("/bags/itri/map.pcd");
+    n.param<std::string>("map_file", map_file, "/bags/itri/map.pcd");
+    ICPManager manager(map_file.c_str());
     
     n.param<std::string>("bag_file", bag_file, "/bags/itri/ITRI_Public.bag");
     n.param<int>("max_iter", max_iter, (int)100);
