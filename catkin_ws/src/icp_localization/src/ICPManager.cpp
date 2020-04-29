@@ -67,33 +67,27 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
 
 void ICPManager::selectMapRange(float x_center, float y_center, float z_center, float x_length, float y_length, float z_length, pcl::PointCloud<PointXYZ>::Ptr& result){
     pcl::PassThrough<pcl::PointXYZ> pass;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr _x_filted(new pcl::PointCloud<pcl::PointXYZ>), 
-                                        _y_filted(new pcl::PointCloud<pcl::PointXYZ>);
+    static pcl::PointCloud<pcl::PointXYZ>::Ptr _x_filted(new pcl::PointCloud<pcl::PointXYZ>), 
+                                                _y_filted(new pcl::PointCloud<pcl::PointXYZ>);
 
     std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
     // filtering X axis
     pass.setInputCloud(pcl::PointCloud<PointXYZ>::Ptr(map_cloud));
-    // std::cout << "x done" << std::endl;
     pass.setFilterFieldName("x");
-    // std::cout << "x done" << std::endl;
     pass.setFilterLimits(x_center - x_length/2, x_center + x_length/2);
-    // std::cout << "x done" << std::endl;
     pass.filter(*_x_filted);
-    // std::cout << "x done" << std::endl;
     // filtering Y axis
     pass.setInputCloud(_x_filted);
     pass.setFilterFieldName("y");
     pass.setFilterLimits(y_center - y_length/2, y_center + y_length/2);
     pass.filter(*_y_filted);
-    // std::cout << "y done" << std::endl;
     // filtering Z axis
     pass.setInputCloud(_y_filted);
     pass.setFilterFieldName("z");
     pass.setFilterLimits(z_center - z_length/2, z_center + z_length/2);
     pass.filter(*result);
-    // std::cout << "z done" << std::endl;
     std::cout << "passthough done" << std::endl;
-    std::cout << result->width << std::endl;
+    std::cout << result->width << std::endl; 
     return;
 
 }
