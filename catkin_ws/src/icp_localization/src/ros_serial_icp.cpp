@@ -15,47 +15,42 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
     ros::NodeHandle n;
     ros::Publisher pub_pose = n.advertise<geometry_msgs::PoseStamped>("/car_pose", 1);
-
-    ICPManager manager("/bags/itri/map.pcd");
-
-    std::string bag_file;
-    n.param<std::string>("bag_file", bag_file, "/bags/itri/ITRI_Public.bag");
-
-    cout << bag_file << endl;
     rosbag::Bag bag;
     rosbag::View view;
+    std::string bag_file;
+
+    ICPManager manager("/bags/itri/map.pcd");
+    
+    n.param<std::string>("bag_file", bag_file, "/bags/itri/ITRI_Public.bag");
     bag.open(bag_file, rosbag::bagmode::Read);
     view.addQuery(bag);
-    // std::cout << bag.getSize() << std::endl;
 
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
-        static Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
+        static Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
-        // cout << msg.getDataType() << endl;
-        // cout << tf << endl;
 
-        if(tf.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity())){
+
+        if(true){
             sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
             if(imu != nullptr){
                 Eigen::Quaternionf rot(imu->orientation.w,
                                         imu->orientation.x,
                                         imu->orientation.y,
                                         imu->orientation.z);
-                tf.topLeftCorner(3, 3) = rot.toRotationMatrix();
-                manager.setGuess(tf);
-                cout << "guess rotation\n" << tf.topLeftCorner(3, 3) << endl;
+                manager.guessOrientation(rot);
+                cout << "guess orientation\n" << rot.toRotationMatrix() << endl;
                 
             }
         }
-        if(tf.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero())){
+        if(pose.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero())){
             geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();;
             if(gps != nullptr){
-                tf.topRightCorner(3, 1) << gps->point.x,
-                                            gps->point.y,
-                                            gps->point.z;
-                manager.setGuess(tf);
-                cout << "guess translation\n" << tf.topRightCorner(3, 1) << endl;
+                Eigen::Vector3f trans(gps->point.x,
+                                    gps->point.y,
+                                    gps->point.z);
+                manager.guessPosition(trans);
+                cout << "guess position\n" << trans << endl;
             }
         }
         
@@ -67,22 +62,22 @@ int main(int argc, char** argv){
 
 
             manager.feedPC(*input_cloud);
-            tf = manager.getPose();
+            pose = manager.getPose();
 
-            geometry_msgs::PoseStamped pose;
-            Eigen::Matrix3f rot_matrix = tf.topLeftCorner(3, 3);
+            geometry_msgs::PoseStamped pose_msg;
+            Eigen::Matrix3f rot_matrix = pose.topLeftCorner(3, 3);
             Eigen::Quaternionf rot(rot_matrix);
-            Eigen::Vector3f trans = tf.topRightCorner(3, 1);
-            pose.header.frame_id = "map";
-            pose.header.stamp = pc->header.stamp;
-            pose.pose.orientation.w = rot.w();
-            pose.pose.orientation.x = rot.x();
-            pose.pose.orientation.y = rot.y();
-            pose.pose.orientation.z = rot.z();
-            pose.pose.position.x = trans.x();
-            pose.pose.position.y = trans.y();
-            pose.pose.position.z = trans.z();
-            pub_pose.publish(pose);
+            Eigen::Vector3f trans = pose.topRightCorner(3, 1);
+            pose_msg.header.frame_id = "map";
+            pose_msg.header.stamp = pc->header.stamp;
+            pose_msg.pose.orientation.w = rot.w();
+            pose_msg.pose.orientation.x = rot.x();
+            pose_msg.pose.orientation.y = rot.y();
+            pose_msg.pose.orientation.z = rot.z();
+            pose_msg.pose.position.x = trans.x();
+            pose_msg.pose.position.y = trans.y();
+            pose_msg.pose.position.z = trans.z();
+            pub_pose.publish(pose_msg);
 
         }
 

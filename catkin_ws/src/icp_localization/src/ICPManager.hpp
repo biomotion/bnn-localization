@@ -23,7 +23,18 @@ public:
     void loadMap(std::string);
     void feedPC(pcl::PointCloud<pcl::PointXYZ>&);
     // void feedPC(pcl::PointCloud<pcl::PointXYZ>, Eigen::Matrix4d); //feed point cloud with guess
-    void setGuess(Eigen::Matrix4f g) { this->guess = g; }
+    void guessTF(Eigen::Matrix4f g) { this->guess = g; }
+    void guessOrientation(Eigen::Quaternionf q) { guessOrientation(q.toRotationMatrix()); } // guess orientation by quaternion
+    void guessOrientation(Eigen::Matrix3f orien){ // guess orientation by rotation matrix
+        if(this->guess.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero()))
+            this->guess = this->pose;
+        this->guess.topLeftCorner(3, 3) = orien;
+    }
+    void guessPosition(Eigen::Vector3f posi){
+        if(this->guess.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity()))
+            this->guess = this->pose;
+        this->guess.topRightCorner(3, 1) = posi;
+    }
     Eigen::Matrix4f getPose() { return this->pose; }
 
 };
