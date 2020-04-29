@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
     }else{
         pcl_conversions::fromPCL(*cloud, output);
         output.header.frame_id = "map";
-        timer = n.createTimer(ros::Duration(0.5), timer_cb);
+        timer = n.createTimer(ros::Duration(1), timer_cb);
         ros::spin();
     }
 

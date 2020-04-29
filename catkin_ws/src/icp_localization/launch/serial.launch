@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="map_path" value="/bags/itri/map.pcd" />
+    <arg name="bag_path" value="/bags/itri/ITRI_Public.bag" />
+    
+    <node name="serial_icp_node" pkg="icp_localization" type="serial_icp" output="screen">
+        <param name="bag_file" type="string" value="$(arg bag_path)" />
+        <param name="map_file" type="string" value="$(arg map_path)" />
+        <param name="max_iter" type="int" value="100" />
+        <param name="max_distance" type="double" value="10" />
+        <param name="transform_epsilon" type="double" value="1e-9" />
+        <param name="fitness_epsilon" type="double" value="0.001" />
+    </node>
+
+
+</launch>
