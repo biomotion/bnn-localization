@@ -69,7 +69,7 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     static pcl::PointCloud<pcl::PointXYZ>::Ptr _x_filted(new pcl::PointCloud<pcl::PointXYZ>), 
                                                 _y_filted(new pcl::PointCloud<pcl::PointXYZ>);
 
-    std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
+    // std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
     // filtering X axis
     pass.setInputCloud(pcl::PointCloud<PointXYZ>::Ptr(map_cloud));
     pass.setFilterFieldName("x");
@@ -85,7 +85,7 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     pass.setFilterFieldName("z");
     pass.setFilterLimits(z_center - z_length/2, z_center + z_length/2);
     pass.filter(*result);
-    std::cout << "passthough done" << std::endl;
+    // std::cout << "passthough done" << std::endl;
     std::cout << result->width << std::endl; 
     return;
 
