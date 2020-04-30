@@ -2,6 +2,8 @@
 <launch>
     <arg name="map_path" value="/bags/itri/map.pcd" />
     <arg name="bag_path" value="/bags/itri/ITRI_Public.bag" />
+
+    <node pkg="tf" type="static_transform_publisher" name="base_to_lidar_publisher" args="0.46 0 3.46 -0.0051505 0.018102 -0.019207 0.99964 base_link velodyne 100" />
     
     <node name="serial_icp_node" pkg="icp_localization" type="serial_icp" output="screen">
         <param name="bag_file" type="string" value="$(arg bag_path)" />
