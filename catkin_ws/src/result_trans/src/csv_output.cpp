@@ -33,11 +33,11 @@ void result_data_callBack(const geometry_msgs::PoseStamped::ConstPtr& msg){
     output_file << ",";
     output_file << msg->pose.position.z;
     output_file << ",";
-    output_file << eular_matrix.eulerAngles(0,1,2)(0);
+    output_file << eular_matrix.eulerAngles(0,1,2)(2);
     output_file << ",";
     output_file << eular_matrix.eulerAngles(0,1,2)(1);
     output_file << ",";
-    output_file << eular_matrix.eulerAngles(0,1,2)(2);
+    output_file << eular_matrix.eulerAngles(0,1,2)(0);
     output_file << "\n";
 
     return;
