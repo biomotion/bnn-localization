@@ -11,9 +11,10 @@
 #include <tf2_msgs/TFMessage.h>
 #include <tf_conversions/tf_eigen.h>
 
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 
 #include"ICPManager.hpp"
-// Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
 using namespace std;
 int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
@@ -96,14 +97,20 @@ int main(int argc, char** argv){
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
             pcl::PointCloud<pcl::PointXYZ>* input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-            pcl::VoxelGrid<pcl::PointXYZ> sor;
-            pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new PointCloud<PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new PointCloud<PointXYZ>), cloud2(new PointCloud<PointXYZ>);
+            pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
+            pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
             pcl::fromROSMsg(*pc, *input_cloud);
 
 
-            sor.setInputCloud(PointCloud<PointXYZ>::Ptr(input_cloud));
-            sor.setLeafSize(0.2f, 0.2f, 0.2f);
-            sor.filter(*filtered_cloud);
+            grid_filter.setInputCloud(PointCloud<PointXYZ>::Ptr(input_cloud));
+            grid_filter.setLeafSize(0.2f, 0.2f, 0.2f);
+            grid_filter.filter(*cloud2);
+            noise_filter.setInputCloud(cloud2);
+            noise_filter.setMeanK(32);
+            noise_filter.setStddevMulThresh(1.0);
+            noise_filter.filter(*filtered_cloud);
+
             manager.feedPC(filtered_cloud);
 
             // manager.feedPC(*input_cloud);
