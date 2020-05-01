@@ -5,6 +5,9 @@
 # include <fstream>
 # include <Eigen/Dense>
 # include <iostream>
+# include <cstdio>
+#include <stdio.h>
+# include <string>
 using namespace std;
 
 ros::Subscriber sub;
@@ -24,21 +27,22 @@ void result_data_callBack(const geometry_msgs::PoseStamped::ConstPtr& msg){
                                             msg->pose.orientation.z);
     Eigen::Matrix3d eular_matrix(orientation_matrix);
 
-    
-    output_file << msg->header.stamp;
-    output_file << ",";
-    output_file << msg->pose.position.x;
-    output_file << ",";
-    output_file << msg->pose.position.y;
-    output_file << ",";
-    output_file << msg->pose.position.z;
-    output_file << ",";
-    output_file << eular_matrix.eulerAngles(0,1,2)(2);
-    output_file << ",";
-    output_file << eular_matrix.eulerAngles(0,1,2)(1);
-    output_file << ",";
-    output_file << eular_matrix.eulerAngles(0,1,2)(0);
-    output_file << "\n";
+    output_file << setprecision(16);
+    output_file << msg->header.stamp
+                << ","
+                << msg->pose.position.x
+                << ","
+                << msg->pose.position.y
+                << ","
+                << msg->pose.position.z
+                << ","
+                << eular_matrix.eulerAngles(0,1,2)(2)
+                << ","
+                << eular_matrix.eulerAngles(0,1,2)(1)
+                << ","
+                << eular_matrix.eulerAngles(0,1,2)(0)
+                << "\n";
+    output_file.flush();
 
     return;
 }
