@@ -102,23 +102,23 @@ int main(int argc, char** argv){
         //handle point cloud topic
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
-            pcl::PointCloud<pcl::PointXYZ>* input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-            pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new PointCloud<PointXYZ>), cloud2(new PointCloud<PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2(new PointCloud<PointXYZ>), cloud3(new PointCloud<PointXYZ>);
             pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
             pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
             pcl::fromROSMsg(*pc, *input_cloud);
             sensor_msgs::PointCloud2 pc_out;
 
-
-            grid_filter.setInputCloud(PointCloud<PointXYZ>::Ptr(input_cloud));
+            noise_filter.setInputCloud(input_cloud);
+            noise_filter.setMeanK(128);
+            noise_filter.setStddevMulThresh(1.0);
+            noise_filter.filter(*cloud2);
+            grid_filter.setInputCloud(cloud2);
             grid_filter.setLeafSize(0.2f, 0.2f, 0.2f);
-            grid_filter.filter(*cloud2);
-            noise_filter.setInputCloud(cloud2);
-            // noise_filter.setMeanK(32);
-            // noise_filter.setStddevMulThresh(1.0);
-            // noise_filter.filter(*filtered_cloud);
+            grid_filter.filter(*cloud3);
 
-            manager.feedPC(cloud2);
+
+            manager.feedPC(cloud3);
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();
