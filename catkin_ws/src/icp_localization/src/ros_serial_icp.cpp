@@ -10,6 +10,7 @@
 #include <tf/transform_listener.h>
 #include <tf2_msgs/TFMessage.h>
 #include <tf_conversions/tf_eigen.h>
+#include <pcl_ros/transforms.h>
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/statistical_outlier_removal.h>
@@ -20,6 +21,7 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
     ros::NodeHandle n("~");
     ros::Publisher pub_pose = n.advertise<geometry_msgs::PoseStamped>("/car_pose", 1);
+    ros::Publisher pub_points = n.advertise<sensor_msgs::PointCloud2>("/points_transformed", 1);
     rosbag::Bag bag;
     rosbag::View view;
     std::string bag_file, map_file;
@@ -68,7 +70,11 @@ int main(int argc, char** argv){
 
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
 
-
+        tf2_msgs::TFMessage::ConstPtr tfs = msg.instantiate<tf2_msgs::TFMessage>();
+        if(tfs != nullptr){
+            cout << *tfs << endl;
+        }
+        
 
         sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
         if(imu != nullptr){
@@ -101,6 +107,7 @@ int main(int argc, char** argv){
             pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
             pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
             pcl::fromROSMsg(*pc, *input_cloud);
+            sensor_msgs::PointCloud2 pc_out;
 
 
             grid_filter.setInputCloud(PointCloud<PointXYZ>::Ptr(input_cloud));
@@ -115,7 +122,9 @@ int main(int argc, char** argv){
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();
-
+            pcl_ros::transformPointCloud(pose, *pc, pc_out);
+            pc_out.header.frame_id = "map";
+            pub_points.publish(pc_out);
             // cout << "tf:\n" << eig_tf_base2lidar.inverse() << endl;
             // pose = eig_tf_base2lidar.inverse() * pose;
             pose.topLeftCorner(3, 3) = eig_tf_base2lidar.topLeftCorner(3, 3).inverse() * pose.topLeftCorner(3, 3);
