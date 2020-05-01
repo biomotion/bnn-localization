@@ -25,12 +25,12 @@ void ICPManager::loadMap(std::string map_file){
     return;
 }
 
-void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>& input_cloud){
-    pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(&input_cloud);
+void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(&input_cloud);
     pcl::PointCloud<pcl::PointXYZ> final_cloud;
     Eigen::Matrix4f gs;
 
-    icp.setInputSource(input_ptr);
+    icp.setInputSource(input_cloud);
     
 
     if(! guess.isApprox(Eigen::Matrix4f::Identity())){
@@ -69,7 +69,7 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     static pcl::PointCloud<pcl::PointXYZ>::Ptr _x_filted(new pcl::PointCloud<pcl::PointXYZ>), 
                                                 _y_filted(new pcl::PointCloud<pcl::PointXYZ>);
 
-    std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
+    // std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
     // filtering X axis
     pass.setInputCloud(pcl::PointCloud<PointXYZ>::Ptr(map_cloud));
     pass.setFilterFieldName("x");
@@ -85,7 +85,7 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     pass.setFilterFieldName("z");
     pass.setFilterLimits(z_center - z_length/2, z_center + z_length/2);
     pass.filter(*result);
-    std::cout << "passthough done" << std::endl;
+    // std::cout << "passthough done" << std::endl;
     std::cout << result->width << std::endl; 
     return;
 

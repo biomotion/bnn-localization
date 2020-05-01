@@ -35,11 +35,15 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 add_executable(read_file src/read_file.cpp)
-target_link_libraries(read_file ${catkin_LIBRARIES}
-                                ${PCL_LIBRARIES})
+target_link_libraries(read_file ${catkin_LIBRARIES})
 
 add_executable(downsampling src/downsampling.cpp)
 target_link_libraries(downsampling ${catkin_LIBRARIES})
 
+
 add_executable(read_gt src/read_gdtruth.cpp)
 target_link_libraries(read_gt ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(outlier_removal src/outlier_removal.cpp)
+target_link_libraries(outlier_removal ${catkin_LIBRARIES})
+
