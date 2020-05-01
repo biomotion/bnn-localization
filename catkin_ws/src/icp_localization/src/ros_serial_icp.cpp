@@ -46,7 +46,7 @@ int main(int argc, char** argv){
 
     tf::TransformListener listener;
     tf::StampedTransform t_base2lidar;
-    Eigen::Matrix4f eig_tf_base2lidar = Eigen::Matrix4f::Identity();
+    Eigen::Matrix4d eig_tf_base2lidar = Eigen::Matrix4d::Identity();
     try{
         listener.waitForTransform("/base_link", "/velodyne", ros::Time(0), ros::Duration(1.0));
         listener.lookupTransform("/base_link", "/velodyne",  
@@ -54,9 +54,9 @@ int main(int argc, char** argv){
         Eigen::Quaterniond r;
         Eigen::Vector3d t;
         tf::quaternionTFToEigen(t_base2lidar.getRotation(), r);
-        eig_tf_base2lidar.topLeftCorner(3, 3) = r.cast<float>().toRotationMatrix();
+        eig_tf_base2lidar.topLeftCorner(3, 3) = r.toRotationMatrix();
         tf::vectorTFToEigen(t_base2lidar.getOrigin(), t);
-        eig_tf_base2lidar.topRightCorner(3, 1) = t.cast<float>();
+        eig_tf_base2lidar.topRightCorner(3, 1) = t;
         // cout << r.toRotationMatrix() << endl;
     }
     catch (tf::TransformException ex){
@@ -65,8 +65,8 @@ int main(int argc, char** argv){
 
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
-        static Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-        static Eigen::Quaternionf staged_imu = Eigen::Quaternionf::Identity();
+        static Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+        static Eigen::Quaterniond staged_imu = Eigen::Quaterniond::Identity();
 
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
 
@@ -78,22 +78,22 @@ int main(int argc, char** argv){
 
         sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
         if(imu != nullptr){
-            if(!pose.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity())) continue;
-            Eigen::Quaternionf imu_orient(imu->orientation.w,
+            if(!pose.topLeftCorner(3, 3).isApprox(Eigen::Matrix3d::Identity())) continue;
+            Eigen::Quaterniond imu_orient(imu->orientation.w,
                                     imu->orientation.x,
                                     imu->orientation.y,
                                     imu->orientation.z);
-            Eigen::Quaterniond t;
-            tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
-            manager.guessOrientation(t.cast<float>() * imu_orient);
+            // Eigen::Quaterniond t;
+            // tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
+            manager.guessOrientation(eig_tf_base2lidar.topLeftCorner(3, 3) * imu_orient);
         }
 
 
         
         geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();;
         if(gps != nullptr){
-            if(!pose.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero())) continue;
-            Eigen::Vector3f trans(gps->point.x,
+            if(!pose.topRightCorner(3, 1).isApprox(Eigen::Vector3d::Zero())) continue;
+            Eigen::Vector3d trans(gps->point.x,
                                 gps->point.y,
                                 gps->point.z);
             manager.guessPosition(trans);
@@ -102,27 +102,27 @@ int main(int argc, char** argv){
         //handle point cloud topic
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
-            pcl::PointCloud<pcl::PointXYZ>* input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-            pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new PointCloud<PointXYZ>), cloud2(new PointCloud<PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2(new PointCloud<PointXYZ>), cloud3(new PointCloud<PointXYZ>);
             pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
             pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
             pcl::fromROSMsg(*pc, *input_cloud);
             sensor_msgs::PointCloud2 pc_out;
 
-
-            grid_filter.setInputCloud(PointCloud<PointXYZ>::Ptr(input_cloud));
-            grid_filter.setLeafSize(0.2f, 0.2f, 0.2f);
-            grid_filter.filter(*cloud2);
-            noise_filter.setInputCloud(cloud2);
-            noise_filter.setMeanK(32);
+            noise_filter.setInputCloud(input_cloud);
+            noise_filter.setMeanK(128);
             noise_filter.setStddevMulThresh(1.0);
-            noise_filter.filter(*filtered_cloud);
+            noise_filter.filter(*cloud2);
+            grid_filter.setInputCloud(cloud2);
+            grid_filter.setLeafSize(0.2f, 0.2f, 0.2f);
+            grid_filter.filter(*cloud3);
 
-            manager.feedPC(filtered_cloud);
+
+            manager.feedPC(cloud3);
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();
-            pcl_ros::transformPointCloud(pose, *pc, pc_out);
+            pcl_ros::transformPointCloud(pose.cast<float>(), *pc, pc_out);
             pc_out.header.frame_id = "map";
             pub_points.publish(pc_out);
             // cout << "tf:\n" << eig_tf_base2lidar.inverse() << endl;
@@ -132,9 +132,9 @@ int main(int argc, char** argv){
             cout << "after tf\n" << pose << endl;
 
             geometry_msgs::PoseStamped pose_msg;
-            Eigen::Matrix3f rot_matrix = pose.topLeftCorner(3, 3);
-            Eigen::Quaternionf rot(rot_matrix);
-            Eigen::Vector3f trans = pose.topRightCorner(3, 1);
+            Eigen::Matrix3d rot_matrix = pose.topLeftCorner(3, 3);
+            Eigen::Quaterniond rot(rot_matrix);
+            Eigen::Vector3d trans = pose.topRightCorner(3, 1);
             pose_msg.header.frame_id = "map";
             pose_msg.header.stamp = pc->header.stamp;
             pose_msg.pose.orientation.w = rot.w();

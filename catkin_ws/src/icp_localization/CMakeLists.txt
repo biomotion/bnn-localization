@@ -83,8 +83,8 @@ target_include_directories(icp_manager PUBLIC src)
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(subscribe_icp src/ros_subscribe_icp.cpp)
-target_link_libraries(subscribe_icp icp_manager ${catkin_LIBRARIES} )
+#add_executable(subscribe_icp src/ros_subscribe_icp.cpp)
+#target_link_libraries(subscribe_icp icp_manager ${catkin_LIBRARIES} )
 
 add_executable(serial_icp src/ros_serial_icp.cpp)
 target_link_libraries(serial_icp icp_manager ${catkin_LIBRARIES})
