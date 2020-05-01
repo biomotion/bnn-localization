@@ -11,7 +11,7 @@
         <param name="max_iter" type="int" value="100" />
         <param name="max_distance" type="double" value="3" />
         <param name="transform_epsilon" type="double" value="1e-10" />
-        <param name="fitness_epsilon" type="double" value="0.001" />
+        <param name="fitness_epsilon" type="double" value="1e-6" />
     </node>
 
 
