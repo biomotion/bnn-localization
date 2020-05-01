@@ -46,7 +46,7 @@ int main(int argc, char** argv){
 
     tf::TransformListener listener;
     tf::StampedTransform t_base2lidar;
-    Eigen::Matrix4f eig_tf_base2lidar = Eigen::Matrix4f::Identity();
+    Eigen::Matrix4d eig_tf_base2lidar = Eigen::Matrix4d::Identity();
     try{
         listener.waitForTransform("/base_link", "/velodyne", ros::Time(0), ros::Duration(1.0));
         listener.lookupTransform("/base_link", "/velodyne",  
@@ -54,9 +54,9 @@ int main(int argc, char** argv){
         Eigen::Quaterniond r;
         Eigen::Vector3d t;
         tf::quaternionTFToEigen(t_base2lidar.getRotation(), r);
-        eig_tf_base2lidar.topLeftCorner(3, 3) = r.cast<float>().toRotationMatrix();
+        eig_tf_base2lidar.topLeftCorner(3, 3) = r.toRotationMatrix();
         tf::vectorTFToEigen(t_base2lidar.getOrigin(), t);
-        eig_tf_base2lidar.topRightCorner(3, 1) = t.cast<float>();
+        eig_tf_base2lidar.topRightCorner(3, 1) = t;
         // cout << r.toRotationMatrix() << endl;
     }
     catch (tf::TransformException ex){
@@ -65,8 +65,8 @@ int main(int argc, char** argv){
 
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
-        static Eigen::Matrix4f pose = Eigen::Matrix4f::Identity();
-        static Eigen::Quaternionf staged_imu = Eigen::Quaternionf::Identity();
+        static Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+        static Eigen::Quaterniond staged_imu = Eigen::Quaterniond::Identity();
 
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
 
@@ -78,22 +78,22 @@ int main(int argc, char** argv){
 
         sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
         if(imu != nullptr){
-            if(!pose.topLeftCorner(3, 3).isApprox(Eigen::Matrix3f::Identity())) continue;
-            Eigen::Quaternionf imu_orient(imu->orientation.w,
+            if(!pose.topLeftCorner(3, 3).isApprox(Eigen::Matrix3d::Identity())) continue;
+            Eigen::Quaterniond imu_orient(imu->orientation.w,
                                     imu->orientation.x,
                                     imu->orientation.y,
                                     imu->orientation.z);
-            Eigen::Quaterniond t;
-            tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
-            manager.guessOrientation(t.cast<float>() * imu_orient);
+            // Eigen::Quaterniond t;
+            // tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
+            manager.guessOrientation(eig_tf_base2lidar.topLeftCorner(3, 3) * imu_orient);
         }
 
 
         
         geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();;
         if(gps != nullptr){
-            if(!pose.topRightCorner(3, 1).isApprox(Eigen::Vector3f::Zero())) continue;
-            Eigen::Vector3f trans(gps->point.x,
+            if(!pose.topRightCorner(3, 1).isApprox(Eigen::Vector3d::Zero())) continue;
+            Eigen::Vector3d trans(gps->point.x,
                                 gps->point.y,
                                 gps->point.z);
             manager.guessPosition(trans);
@@ -122,7 +122,7 @@ int main(int argc, char** argv){
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();
-            pcl_ros::transformPointCloud(pose, *pc, pc_out);
+            pcl_ros::transformPointCloud(pose.cast<float>(), *pc, pc_out);
             pc_out.header.frame_id = "map";
             pub_points.publish(pc_out);
             // cout << "tf:\n" << eig_tf_base2lidar.inverse() << endl;
@@ -132,9 +132,9 @@ int main(int argc, char** argv){
             cout << "after tf\n" << pose << endl;
 
             geometry_msgs::PoseStamped pose_msg;
-            Eigen::Matrix3f rot_matrix = pose.topLeftCorner(3, 3);
-            Eigen::Quaternionf rot(rot_matrix);
-            Eigen::Vector3f trans = pose.topRightCorner(3, 1);
+            Eigen::Matrix3d rot_matrix = pose.topLeftCorner(3, 3);
+            Eigen::Quaterniond rot(rot_matrix);
+            Eigen::Vector3d trans = pose.topRightCorner(3, 1);
             pose_msg.header.frame_id = "map";
             pose_msg.header.stamp = pc->header.stamp;
             pose_msg.pose.orientation.w = rot.w();

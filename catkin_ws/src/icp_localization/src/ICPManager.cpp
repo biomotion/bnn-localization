@@ -1,20 +1,12 @@
 #include"ICPManager.hpp"
 using namespace pcl;
-ICPManager::ICPManager():pose(Eigen::Matrix4f::Identity()), guess(Eigen::Matrix4f::Identity()), map_cloud(new pcl::PointCloud<pcl::PointXYZ>){
-    // this->icp.setMaxCorrespondenceDistance(0.05);
-    // this->icp.setTransformationEpsilon(1e-10);
-    // this->icp.setEuclideanFitnessEpsilon(0.01);
-    // this->icp.setMaximumIterations(100);   
+ICPManager::ICPManager():pose(Eigen::Matrix4d::Identity()), guess(Eigen::Matrix4d::Identity()), map_cloud(new pcl::PointCloud<pcl::PointXYZ>){
 }
 
-ICPManager::ICPManager(char const * map_file):pose(Eigen::Matrix4f::Identity()), guess(Eigen::Matrix4f::Identity()), map_cloud(new pcl::PointCloud<pcl::PointXYZ>){
+ICPManager::ICPManager(char const * map_file):pose(Eigen::Matrix4d::Identity()), guess(Eigen::Matrix4d::Identity()), map_cloud(new pcl::PointCloud<pcl::PointXYZ>){
     if(pcl::io::loadPCDFile (map_file, *map_cloud) < 0){
         PCL_ERROR("Couldn't read file %s\n", map_file);
     }
-    this->icp.setMaxCorrespondenceDistance(10);
-    this->icp.setTransformationEpsilon(1e-10);
-    this->icp.setEuclideanFitnessEpsilon(0.001);
-    this->icp.setMaximumIterations(100);   
 }
 
 
@@ -28,32 +20,32 @@ void ICPManager::loadMap(std::string map_file){
 void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
     // pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(&input_cloud);
     pcl::PointCloud<pcl::PointXYZ> final_cloud;
-    Eigen::Matrix4f gs;
+    Eigen::Matrix4d gs;
 
     icp.setInputSource(input_cloud);
     
 
-    if(! guess.isApprox(Eigen::Matrix4f::Identity())){
+    if(! guess.isApprox(Eigen::Matrix4d::Identity())){
         gs = guess;
         guess.setIdentity();
     }
-    else if(! pose.isApprox(Eigen::Matrix4f::Identity())){
+    else if(! pose.isApprox(Eigen::Matrix4d::Identity())){
         gs = pose;
     }else{
         PCL_WARN("Alining without guess\n");
         gs.setIdentity();
     }
 
-    if(gs.isApprox(Eigen::Matrix4f::Identity()))
+    if(gs.isApprox(Eigen::Matrix4d::Identity()))
         icp.setInputTarget(map_cloud);
     else{
-        Eigen::Vector3f point = gs.topRightCorner(3, 1);
+        Eigen::Vector3d point = gs.topRightCorner(3, 1);
         pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
         this->selectMapRange(point(0), point(1), point(2), 100, 100, 30, inputTarget);
         icp.setInputTarget(inputTarget);
     }
     std::cout << "aligning..." << std::endl;
-    icp.align(final_cloud, gs);
+    icp.align(final_cloud, gs); 
 
     std::cout << "has converge: " << icp.hasConverged() << std::endl; 
     if(icp.hasConverged()){
@@ -65,13 +57,13 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
 }
 
 void ICPManager::selectMapRange(float x_center, float y_center, float z_center, float x_length, float y_length, float z_length, pcl::PointCloud<PointXYZ>::Ptr& result){
-    pcl::PassThrough<pcl::PointXYZ> pass;
-    static pcl::PointCloud<pcl::PointXYZ>::Ptr _x_filted(new pcl::PointCloud<pcl::PointXYZ>), 
-                                                _y_filted(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PassThrough<PointXYZ> pass;
+    static PointCloud<PointXYZ>::Ptr _x_filted(new PointCloud<PointXYZ>), 
+                                    _y_filted(new PointCloud<PointXYZ>);
 
     // std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
     // filtering X axis
-    pass.setInputCloud(pcl::PointCloud<PointXYZ>::Ptr(map_cloud));
+    pass.setInputCloud(map_cloud);
     pass.setFilterFieldName("x");
     pass.setFilterLimits(x_center - x_length/2, x_center + x_length/2);
     pass.filter(*_x_filted);
