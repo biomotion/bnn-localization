@@ -114,11 +114,11 @@ int main(int argc, char** argv){
             grid_filter.setLeafSize(0.2f, 0.2f, 0.2f);
             grid_filter.filter(*cloud2);
             noise_filter.setInputCloud(cloud2);
-            noise_filter.setMeanK(32);
-            noise_filter.setStddevMulThresh(1.0);
-            noise_filter.filter(*filtered_cloud);
+            // noise_filter.setMeanK(32);
+            // noise_filter.setStddevMulThresh(1.0);
+            // noise_filter.filter(*filtered_cloud);
 
-            manager.feedPC(filtered_cloud);
+            manager.feedPC(cloud2);
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();
