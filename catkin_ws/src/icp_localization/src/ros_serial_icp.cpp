@@ -86,6 +86,7 @@ int main(int argc, char** argv){
             // Eigen::Quaterniond t;
             // tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
             manager.guessOrientation(eig_tf_base2lidar.topLeftCorner(3, 3) * imu_orient);
+            cout << "guess imu: \n" << eig_tf_base2lidar.topLeftCorner(3, 3) * imu_orient << endl;
         }
 
 
@@ -97,17 +98,19 @@ int main(int argc, char** argv){
                                 gps->point.y,
                                 gps->point.z);
             manager.guessPosition(trans);
+            cout << "guess gps: \n" << trans << endl;
         }
         
         //handle point cloud topic
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
-            pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2(new PointCloud<PointXYZ>), cloud3(new PointCloud<PointXYZ>);
+            sensor_msgs::PointCloud2 pc_on_base, pc_out;
+            PointCloud<PointXYZ>::Ptr input_cloud(new PointCloud<PointXYZ>),
+                                                cloud2(new PointCloud<PointXYZ>),
+                                                cloud3(new PointCloud<PointXYZ>);
             pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
             pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
             pcl::fromROSMsg(*pc, *input_cloud);
-            sensor_msgs::PointCloud2 pc_out;
 
             noise_filter.setInputCloud(input_cloud);
             noise_filter.setMeanK(128);
