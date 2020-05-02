@@ -85,7 +85,8 @@ int main(int argc, char** argv){
                                     imu->orientation.z);
             // Eigen::Quaterniond t;
             // tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
-            manager.guessOrientation(eig_tf_base2lidar.topLeftCorner(3, 3) * imu_orient);
+            manager.guessOrientation(imu_orient);
+            cout << "guess imu: \n" << imu_orient.toRotationMatrix() << endl;
         }
 
 
@@ -97,24 +98,28 @@ int main(int argc, char** argv){
                                 gps->point.y,
                                 gps->point.z);
             manager.guessPosition(trans);
+            cout << "guess gps: \n" << trans << endl;
         }
         
         //handle point cloud topic
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
-            pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud2(new PointCloud<PointXYZ>), cloud3(new PointCloud<PointXYZ>);
+            sensor_msgs::PointCloud2 pc_on_base, pc_out;
+            PointCloud<PointXYZ>::Ptr input_cloud(new PointCloud<PointXYZ>),
+                                      cloud2(new PointCloud<PointXYZ>),
+                                      cloud3(new PointCloud<PointXYZ>);
             pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
             pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
-            pcl::fromROSMsg(*pc, *input_cloud);
-            sensor_msgs::PointCloud2 pc_out;
+
+            pcl_ros::transformPointCloud(eig_tf_base2lidar.cast<float>(), *pc, pc_on_base);
+            pcl::fromROSMsg(pc_on_base, *input_cloud);
 
             noise_filter.setInputCloud(input_cloud);
-            noise_filter.setMeanK(128);
+            noise_filter.setMeanK(64);
             noise_filter.setStddevMulThresh(1.0);
             noise_filter.filter(*cloud2);
             grid_filter.setInputCloud(cloud2);
-            grid_filter.setLeafSize(0.2f, 0.2f, 0.2f);
+            grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
             grid_filter.filter(*cloud3);
 
 
@@ -122,14 +127,9 @@ int main(int argc, char** argv){
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();
-            pcl_ros::transformPointCloud(pose.cast<float>(), *pc, pc_out);
+            pcl_ros::transformPointCloud(pose.cast<float>(), pc_on_base, pc_out);
             pc_out.header.frame_id = "map";
             pub_points.publish(pc_out);
-            // cout << "tf:\n" << eig_tf_base2lidar.inverse() << endl;
-            // pose = eig_tf_base2lidar.inverse() * pose;
-            pose.topLeftCorner(3, 3) = eig_tf_base2lidar.topLeftCorner(3, 3).inverse() * pose.topLeftCorner(3, 3);
-            pose.topRightCorner(3, 1) = -eig_tf_base2lidar.topRightCorner(3, 1) + pose.topRightCorner(3, 1);
-            cout << "after tf\n" << pose << endl;
 
             geometry_msgs::PoseStamped pose_msg;
             Eigen::Matrix3d rot_matrix = pose.topLeftCorner(3, 3);
