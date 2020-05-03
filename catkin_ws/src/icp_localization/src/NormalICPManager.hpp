@@ -4,22 +4,25 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
+#include <pcl/features/normal_3d.h>
 #include <iostream>
 
 using namespace pcl;
 
-#ifndef ICP_MANAGER_H
-#define ICP_MANAGER_H
-class ICPManager{
+#ifndef NORMAL_ICP_MANAGER_H
+#define NORMAL_ICP_MANAGER_H
+class NormalICPManager{
 private:
     Eigen::Matrix4Xd pose, guess;
     // PCL stuffs
-    pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ, double> icp;
+    pcl::IterativeClosestPointWithNormals<PointXYZRGBNormal, PointXYZRGBNormal, double> icp;
     pcl::PointCloud<pcl::PointXYZ>::Ptr map_cloud;
-    void selectMapRange(float, float, float, float, float, float, pcl::PointCloud<PointXYZ>::Ptr&);
+    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr map_with_normals;
+    void selectMapRange(float, float, float, float, float, float, pcl::PointCloud<PointXYZRGBNormal>::Ptr&);
+    void computeNormal(pcl::PointCloud<pcl::PointXYZ>::Ptr, pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr);
 public:
-    ICPManager();
-    ICPManager(char const * map_file);
+    NormalICPManager();
+    NormalICPManager(char const * map_file);
     void loadMap(std::string);
     void feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr&);
     // void feedPC(pcl::PointCloud<pcl::PointXYZ>, Eigen::Matrix4d); //feed point cloud with guess

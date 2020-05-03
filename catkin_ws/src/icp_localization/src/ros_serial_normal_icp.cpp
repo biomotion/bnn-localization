@@ -15,7 +15,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 
-#include"ICPManager.hpp"
+#include"NormalICPManager.hpp"
 using namespace std;
 int main(int argc, char** argv){
     ros::init(argc, argv, "serial_icp_node");
@@ -29,7 +29,7 @@ int main(int argc, char** argv){
     int max_iter=100;
 
     n.param<std::string>("map_file", map_file, "/bags/itri/map.pcd");
-    ICPManager manager(map_file.c_str());
+    NormalICPManager manager(map_file.c_str());
     
     n.param<std::string>("bag_file", bag_file, "/bags/itri/ITRI_Public.bag");
     n.param<int>("max_iter", max_iter, (int)100);

@@ -22,7 +22,7 @@ void cb_cloud(const sensor_msgs::PointCloud2ConstPtr& input_msg){
 	//process here
 	pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
 	sor.setInputCloud (cloudPtr);
-	sor.setLeafSize (1.6f, 1.6f, 1.6f);
+	sor.setLeafSize (0.4f, 0.4f, 0.4f);
 	sor.filter (cloud_filtered);
 
 	pcl_conversions::fromPCL(cloud_filtered, output);

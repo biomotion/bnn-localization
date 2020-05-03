@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="input_topic" default="/lidar_points"/>
+    <arg name="output_topic" default="/points_filtered"/>
+
+    <node name="outlier_removal_node" pkg="pointcloud_util" type="outlier_removal" output="screen">
+        <remap from="~points_in" to="$(arg input_topic)"/>
+        <remap from="~points_out" to="$(arg output_topic)"/>
+    </node>
+
+</launch>

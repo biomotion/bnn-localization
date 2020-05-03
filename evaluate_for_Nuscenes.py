@@ -50,8 +50,8 @@ def calscore(_gt, _meas, args):
         for m in range(len(_meas)):
             meas = _meas[m]
             if( abs(_gt[i][0] - meas[0]) < 1E-6):
-                gt = numpy.array(_gt[i][1:3])
-                mm = numpy.array(meas[1:3])
+                gt = numpy.array(_gt[i][1:2])
+                mm = numpy.array(meas[1:2])
                 dist = numpy.linalg.norm(gt-mm)
                 _dist_score.append(grading(dist, float(args.sigma[0])))
                 _yaw_score.append(grading(min_angle(_gt[i][4], meas[4]), float(args.sigma[1])))

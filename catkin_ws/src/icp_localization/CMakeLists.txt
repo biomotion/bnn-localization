@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   visualization_msgs
+  tf_conversions
 )
 
 ## System dependencies are found with CMake's conventions
@@ -53,6 +54,7 @@ include_directories(
 ## Declare a C++ library
 add_library(icp_manager SHARED
   src/ICPManager.cpp
+  src/NormalICPManager.cpp
 )
 target_link_libraries(icp_manager ${catkin_LIBRARIES})
 target_include_directories(icp_manager PUBLIC src)
@@ -82,11 +84,15 @@ target_include_directories(icp_manager PUBLIC src)
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(subscribe_icp src/ros_subscribe_icp.cpp)
-target_link_libraries(subscribe_icp icp_manager ${catkin_LIBRARIES} )
+#add_executable(subscribe_icp src/ros_subscribe_icp.cpp)
+#target_link_libraries(subscribe_icp icp_manager ${catkin_LIBRARIES} )
 
 add_executable(serial_icp src/ros_serial_icp.cpp)
 target_link_libraries(serial_icp icp_manager ${catkin_LIBRARIES})
 
+
 add_executable(icp_ekf src/Icp_ekf.cpp)
 target_link_libraries(icp_ekf ${catkin_LIBRARIES})
+
+add_executable(serial_normal_icp src/ros_serial_normal_icp.cpp)
+target_link_libraries(serial_normal_icp icp_manager ${catkin_LIBRARIES})
