@@ -92,9 +92,9 @@ void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<Po
     noise_filter.setMeanK(64);
     noise_filter.setStddevMulThresh(1.0);
     noise_filter.filter(*output);
-    grid_filter.setInputCloud(output);
-    grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
-    grid_filter.filter(*output);
+    // grid_filter.setInputCloud(output);
+    // grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
+    // grid_filter.filter(*output);
 }
 
 // void ICPManager::cropPoints(PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output, float x_range, float y_range, float z_range){
