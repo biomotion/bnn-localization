@@ -23,29 +23,44 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
 
     pcl::PointCloud<PointXYZ>::Ptr input_processed(new PointCloud<PointXYZ>);
     this->pointsPreCompute(input_cloud, input_processed);
-    icp.setInputSource(input_processed);
     
-    if(! guess.isApprox(Eigen::Matrix4d::Identity())){
+    // align with guess
+    if(! guess.isApprox(Eigen::Matrix4d::Identity())){ 
         gs = guess;
         guess.setIdentity();
+
+        Eigen::Vector3d point = gs.topRightCorner(3, 1);
+        if(gs.topLeftCorner(3, 3).isApprox(Eigen::Matrix3d::Identity())){
+            PointCloud<PointXYZ>::Ptr inputSource(new PointCloud<PointXYZ>);
+            PointCloud<PointXYZ>::Ptr inputTarget(new PointCloud<PointXYZ>);
+            this->groundFilter(-0.5, 0.5, input_processed, inputSource);
+            this->selectMapRange(point(0), point(1), point(2), 50, 50, 1, inputTarget);
+            icp.setInputSource(inputSource);
+            icp.setInputTarget(inputTarget);
+        }else{
+            pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
+            this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
+            icp.setInputSource(input_processed);
+            icp.setInputTarget(inputTarget);
+        }
     }
+    // align with pose as guess
     else if(! pose.isApprox(Eigen::Matrix4d::Identity())){
         gs = pose;
-    }else{
-        PCL_WARN("Alining without guess\n");
-        gs.setIdentity();
-    }
-
-    if(gs.isApprox(Eigen::Matrix4d::Identity())){
-        PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<PointXYZ>);
-        // this->pointsPreCompute(map_cloud, inputTarget);
-        icp.setInputTarget(map_cloud);
-    }else{
         Eigen::Vector3d point = gs.topRightCorner(3, 1);
         pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
         this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
+        icp.setInputSource(input_processed);
         icp.setInputTarget(inputTarget);
     }
+    // align without any guess using whole map
+    else{
+        PCL_WARN("Alining without guess\n");
+        gs.setIdentity();
+        icp.setInputSource(input_processed);
+        icp.setInputTarget(map_cloud);
+    }
+
     std::cout << "aligning..." << std::endl;
     icp.align(final_cloud, gs); 
 
@@ -97,26 +112,15 @@ void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<Po
     // grid_filter.filter(*output);
 }
 
-// void ICPManager::cropPoints(PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output, float x_range, float y_range, float z_range){
-//     pcl::PassThrough<PointXYZ> pass;
+void ICPManager::groundFilter(float zmin, float zmax, PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output){
+    pcl::PassThrough<PointXYZ> pass;
 
-//     // std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
-//     // filtering X axis
-//     pass.setInputCloud(input);
-//     pass.setFilterFieldName("x");
-//     pass.setFilterLimits(- x_range/2, x_range/2);
-//     pass.filter(*output);
-//     // filtering Y axis
-//     pass.setInputCloud(output);
-//     pass.setFilterFieldName("y");
-//     pass.setFilterLimits(-y_range/2, y_range/2);
-//     pass.filter(*output);
-//     // filtering Z axis
-//     pass.setInputCloud(output);
-//     pass.setFilterFieldName("z");
-//     pass.setFilterLimits(-z_range/2, z_range/2);
-//     pass.filter(*output);
-//     // std::cout << "passthough done" << std::endl;
-//     std::cout << output->width << std::endl; 
-//     return;
-// }
+    // filtering Z axis
+    pass.setInputCloud(input);
+    pass.setFilterFieldName("z");
+    pass.setFilterLimits(zmin, zmax);
+    pass.filter(*output);
+
+    std::cout << "ground points: " << output->width << std::endl;
+    return;
+}

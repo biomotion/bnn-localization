@@ -19,6 +19,7 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr map_cloud;
     void selectMapRange(float, float, float, float, float, float, pcl::PointCloud<PointXYZ>::Ptr&);
     void pointsPreCompute(PointCloud<PointXYZ>::Ptr, PointCloud<PointXYZ>::Ptr);
+    void groundFilter(float zmin, float zmax, PointCloud<PointXYZ>::Ptr, PointCloud<PointXYZ>::Ptr);
     public:
     ICPManager();
     ICPManager(char const * map_file);
