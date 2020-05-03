@@ -10,8 +10,8 @@ output = []
 
 def pose_cb(msg):
     rospy.loginfo("recieve pose\n%s" % str(msg.pose))
-
-    data = [msg.header.stamp, 
+    # msg = PoseStamped()
+    data = [msg.header.stamp.to_sec(), 
             msg.pose.position.x, 
             msg.pose.position.y, 
             msg.pose.position.z]
