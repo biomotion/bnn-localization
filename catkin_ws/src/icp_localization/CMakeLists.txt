@@ -87,3 +87,6 @@ target_link_libraries(subscribe_icp icp_manager ${catkin_LIBRARIES} )
 
 add_executable(serial_icp src/ros_serial_icp.cpp)
 target_link_libraries(serial_icp icp_manager ${catkin_LIBRARIES})
+
+add_executable(icp_ekf src/Icp_ekf.cpp)
+target_link_libraries(icp_ekf ${catkin_LIBRARIES})
