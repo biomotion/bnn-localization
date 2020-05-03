@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="input_topic" default="/lidar_points"/>
+    <arg name="output_topic" default="/points_filtered"/>
+
+    <node name="ground_filter_node" pkg="pointcloud_util" type="ground_filter" output="screen">
+        <param name="z_min" type="double" value="-5.0" />
+        <param name="z_max" type="double" value="-3.0" />
+        
+        <remap from="~points_in" to="$(arg input_topic)"/>
+        <remap from="~points_out" to="$(arg output_topic)"/>
+    </node>
+
+</launch>

@@ -47,3 +47,5 @@ target_link_libraries(read_gt ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_executable(outlier_removal src/outlier_removal.cpp)
 target_link_libraries(outlier_removal ${catkin_LIBRARIES})
 
+add_executable(ground_filter src/ground_filter.cpp)
+target_link_libraries(ground_filter ${catkin_LIBRARIES})

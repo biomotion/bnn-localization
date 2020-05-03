@@ -12,9 +12,6 @@
 #include <tf_conversions/tf_eigen.h>
 #include <pcl_ros/transforms.h>
 
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/filters/statistical_outlier_removal.h>
-
 #include"ICPManager.hpp"
 using namespace std;
 int main(int argc, char** argv){
@@ -105,25 +102,12 @@ int main(int argc, char** argv){
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
             sensor_msgs::PointCloud2 pc_on_base, pc_out;
-            PointCloud<PointXYZ>::Ptr input_cloud(new PointCloud<PointXYZ>),
-                                      cloud2(new PointCloud<PointXYZ>),
-                                      cloud3(new PointCloud<PointXYZ>);
-            pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
-            pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
+            PointCloud<PointXYZ>::Ptr input_cloud(new PointCloud<PointXYZ>);
 
             pcl_ros::transformPointCloud(eig_tf_base2lidar.cast<float>(), *pc, pc_on_base);
             pcl::fromROSMsg(pc_on_base, *input_cloud);
 
-            noise_filter.setInputCloud(input_cloud);
-            noise_filter.setMeanK(64);
-            noise_filter.setStddevMulThresh(1.0);
-            noise_filter.filter(*cloud2);
-            grid_filter.setInputCloud(cloud2);
-            grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
-            grid_filter.filter(*cloud3);
-
-
-            manager.feedPC(cloud3);
+            manager.feedPC(input_cloud);
 
             // manager.feedPC(*input_cloud);
             pose = manager.getPose();

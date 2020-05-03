@@ -3,6 +3,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/passthrough.h>
 #include <iostream>
 
@@ -17,7 +18,9 @@ private:
     pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ, double> icp;
     pcl::PointCloud<pcl::PointXYZ>::Ptr map_cloud;
     void selectMapRange(float, float, float, float, float, float, pcl::PointCloud<PointXYZ>::Ptr&);
-public:
+    void pointsPreCompute(PointCloud<PointXYZ>::Ptr, PointCloud<PointXYZ>::Ptr);
+    void groundFilter(float zmin, float zmax, PointCloud<PointXYZ>::Ptr, PointCloud<PointXYZ>::Ptr);
+    public:
     ICPManager();
     ICPManager(char const * map_file);
     void loadMap(std::string);
