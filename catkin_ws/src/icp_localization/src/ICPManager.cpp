@@ -18,13 +18,13 @@ void ICPManager::loadMap(std::string map_file){
 }
 
 void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
-    // pcl::PointCloud<pcl::PointXYZ>::Ptr input_ptr(&input_cloud);
     pcl::PointCloud<pcl::PointXYZ> final_cloud;
     Eigen::Matrix4d gs;
 
-    icp.setInputSource(input_cloud);
+    pcl::PointCloud<PointXYZ>::Ptr input_processed(new PointCloud<PointXYZ>);
+    this->pointsPreCompute(input_cloud, input_processed);
+    icp.setInputSource(input_processed);
     
-
     if(! guess.isApprox(Eigen::Matrix4d::Identity())){
         gs = guess;
         guess.setIdentity();
@@ -36,9 +36,11 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
         gs.setIdentity();
     }
 
-    if(gs.isApprox(Eigen::Matrix4d::Identity()))
+    if(gs.isApprox(Eigen::Matrix4d::Identity())){
+        PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<PointXYZ>);
+        // this->pointsPreCompute(map_cloud, inputTarget);
         icp.setInputTarget(map_cloud);
-    else{
+    }else{
         Eigen::Vector3d point = gs.topRightCorner(3, 1);
         pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
         this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
@@ -82,3 +84,39 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     return;
 
 }
+
+void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output){
+    pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
+    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
+    noise_filter.setInputCloud(input);
+    noise_filter.setMeanK(64);
+    noise_filter.setStddevMulThresh(1.0);
+    noise_filter.filter(*output);
+    grid_filter.setInputCloud(output);
+    grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
+    grid_filter.filter(*output);
+}
+
+// void ICPManager::cropPoints(PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output, float x_range, float y_range, float z_range){
+//     pcl::PassThrough<PointXYZ> pass;
+
+//     // std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
+//     // filtering X axis
+//     pass.setInputCloud(input);
+//     pass.setFilterFieldName("x");
+//     pass.setFilterLimits(- x_range/2, x_range/2);
+//     pass.filter(*output);
+//     // filtering Y axis
+//     pass.setInputCloud(output);
+//     pass.setFilterFieldName("y");
+//     pass.setFilterLimits(-y_range/2, y_range/2);
+//     pass.filter(*output);
+//     // filtering Z axis
+//     pass.setInputCloud(output);
+//     pass.setFilterFieldName("z");
+//     pass.setFilterLimits(-z_range/2, z_range/2);
+//     pass.filter(*output);
+//     // std::cout << "passthough done" << std::endl;
+//     std::cout << output->width << std::endl; 
+//     return;
+// }
