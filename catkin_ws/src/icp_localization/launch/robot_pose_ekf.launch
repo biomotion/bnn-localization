@@ -1,5 +1,5 @@
 <launch>
-
+    <node pkg="tf" type="static_transform_publisher" name="wtf" args="0 0 0 0 0 0 1 map odom_combined 100" />
     <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
         <param name="output_frame" value="odom_combined"/>
         <param name="base_footprint_frame" value="base_footprint"/>
@@ -12,12 +12,12 @@
         <remap from="imu_data" to="imu/data" />
     </node>
 
-    <node pkg="icp_localization" type="icp_ekf" name="icp_ekf" output="screen"/>
-        <param name="cov_x" type="float" value="0" />
-        <param name="cov_y" type="float" value="0" />
-        <param name="cov_z" type="float" value="0" />
-        <param name="cov_yaw" type="float" value="0" />
-        <param name="cov_pitch" type="float" value="0" />
-        <param name="cov_roll" type="float" value="0" />
+    <node pkg="icp_localization" type="icp_ekf" name="icp_ekf" output="screen">
+        <param name="cov_x" type="double" value="0" />
+        <param name="cov_y" type="double" value="0" />
+        <param name="cov_z" type="double" value="0" />
+        <param name="cov_yaw" type="double" value="0" />
+        <param name="cov_pitch" type="double" value="0" />
+        <param name="cov_roll" type="double" value="0" />
     </node>
 </launch>
