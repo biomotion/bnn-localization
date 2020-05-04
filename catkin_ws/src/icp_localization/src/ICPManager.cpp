@@ -24,51 +24,16 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
     pcl::PointCloud<PointXYZ>::Ptr input_processed(new PointCloud<PointXYZ>);
     this->pointsPreCompute(input_cloud, input_processed);
     
-    // align with guess (maybe first align)
+    // align with guess
     if(! guess.isApprox(Eigen::Matrix4d::Identity())){ 
         gs = guess;
         guess.setIdentity();
-
         Eigen::Vector3d point = gs.topRightCorner(3, 1);
-        // align without orienation
-        if(gs.topLeftCorner(3, 3).isApprox(Eigen::Matrix3d::Identity())){ 
-            PointCloud<PointXYZ>::Ptr inputSource(new PointCloud<PointXYZ>);
-            PointCloud<PointXYZ>::Ptr inputTarget(new PointCloud<PointXYZ>);
-            pcl::IterativeClosestPoint<PointXYZ, PointXYZ, double> first_icp;
-            // this->groundFilter(-0.5, 0.5, input_processed, inputSource);
-            this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
-            icp.setInputSource(input_processed);
-            icp.setInputTarget(inputTarget);
 
-            // Find best orientation
-            Eigen::Matrix4d first_guess=gs, best_guess;
-            double min_score = 1e100;
-            first_icp.setMaxCorrespondenceDistance(5);
-            first_icp.setTransformationEpsilon(1e-9);
-            first_icp.setEuclideanFitnessEpsilon(1e-4);
-            first_icp.setMaximumIterations(20);
-            first_icp.setInputSource(input_processed);
-            first_icp.setInputTarget(inputTarget);
-            for(uint8_t i=0; i<36; i++){
-                first_icp.align(final_cloud, first_guess);
-                std::cout << (int)i << "guess score:" << first_icp.getFitnessScore(1.0f) <<  std::endl;
-                if(first_icp.getFitnessScore(1.0f)<min_score){
-                    min_score = first_icp.getFitnessScore(1.0f);
-                    best_guess = first_guess;
-                    std::cout << "better result" << std::endl;
-                }
-                first_guess.topLeftCorner(3, 3) = Eigen::AngleAxisd(M_PI/18, Eigen::Vector3d::UnitZ()) * first_guess.topLeftCorner(3, 3);
-            }
-            gs = best_guess;
-            std::cout << "using initial guess\n" << gs << std::endl;
-
-        // align with orientation
-        }else{
-            pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
-            this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
-            icp.setInputSource(input_processed);
-            icp.setInputTarget(inputTarget);
-        }
+        pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
+        this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
+        icp.setInputSource(input_processed);
+        icp.setInputTarget(inputTarget);
     }
     // align with pose as guess
     else if(! pose.isApprox(Eigen::Matrix4d::Identity())){
@@ -92,7 +57,7 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
 
     std::cout << "has converge: " << icp.hasConverged() << std::endl; 
     if(icp.hasConverged()){
-        std::cout << "score: " << icp.getFitnessScore() << std::endl; 
+        std::cout << "score: " << icp.getFitnessScore(1.0f) << std::endl; 
         std::cout << icp.getFinalTransformation() << std::endl;
         pose = icp.getFinalTransformation();
         PCL_INFO("Pose updated\n");

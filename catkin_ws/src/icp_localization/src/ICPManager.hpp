@@ -47,7 +47,7 @@ private:
         this->icp.setEuclideanFitnessEpsilon(fit_esln);
         this->icp.setMaximumIterations(max_iter);
     }
-
+    float getLastScore(float max){ return icp.getFitnessScore(max); }
 };
 
 #endif
