@@ -63,8 +63,7 @@ int main(int argc, char** argv){
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
         static Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
-        static Eigen::Quaterniond staged_imu = Eigen::Quaterniond::Identity();
-
+        static Eigen::Vector3d staged_gps = Eigen::Vector3d::Identity();
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
 
         tf2_msgs::TFMessage::ConstPtr tfs = msg.instantiate<tf2_msgs::TFMessage>();
@@ -80,8 +79,6 @@ int main(int argc, char** argv){
                                     imu->orientation.x,
                                     imu->orientation.y,
                                     imu->orientation.z);
-            // Eigen::Quaterniond t;
-            // tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
             // manager.guessOrientation(imu_orient);
             // cout << "guess imu: \n" << imu_orient.toRotationMatrix() << endl;
         }
@@ -94,8 +91,9 @@ int main(int argc, char** argv){
             Eigen::Vector3d trans(gps->point.x,
                                 gps->point.y,
                                 gps->point.z);
-            manager.guessPosition(trans);
-            cout << "guess gps: \n" << trans << endl;
+            // manager.guessPosition(trans);
+            // cout << "guess gps: \n" << trans << endl;
+            staged_gps = trans;
         }
         
         //handle point cloud topic
@@ -107,9 +105,37 @@ int main(int argc, char** argv){
             pcl_ros::transformPointCloud(eig_tf_base2lidar.cast<float>(), *pc, pc_on_base);
             pcl::fromROSMsg(pc_on_base, *input_cloud);
 
-            manager.feedPC(input_cloud);
+            if(pose.isApprox(Eigen::Matrix4d::Identity())){
+                // First Aligning
+                double min_score = 1e200;
+                Eigen::Matrix3d try_orient=Eigen::Matrix3d::Identity(), best_orient;
+                Eigen::Vector3d best_gps;
+                manager.setParams(2, 1e-10, 1e-5, 20);
+                for(int i=1; i<37; i++){
+                    cout << "trying #" << i << endl;
+                    manager.guessOrientation(try_orient);
+                    manager.guessPosition(staged_gps);
+                    manager.feedPC(input_cloud);
+                    if(manager.getLastScore(1.0f)<min_score){
+                        min_score = manager.getLastScore(1.0f);
+                        best_orient = manager.getPose().topLeftCorner(3, 3);
+                        best_gps = manager.getPose().topRightCorner(3, 1);
+                        ROS_WARN("Better score");
+                    }
+                    // rotate for next try
+                    try_orient = Eigen::AngleAxisd(M_PI/18, Eigen::Vector3d::UnitZ()) * try_orient;
 
-            // manager.feedPC(*input_cloud);
+                    pose = manager.getPose();
+                    pcl_ros::transformPointCloud(pose.cast<float>(), pc_on_base, pc_out);
+                    pc_out.header.frame_id = "map";
+                    pub_points.publish(pc_out);
+                }
+                manager.guessOrientation(best_orient);
+                manager.guessPosition(best_gps);
+
+            }
+
+            manager.feedPC(input_cloud);
             pose = manager.getPose();
             pcl_ros::transformPointCloud(pose.cast<float>(), pc_on_base, pc_out);
             pc_out.header.frame_id = "map";
