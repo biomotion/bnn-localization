@@ -66,27 +66,35 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
 
 void ICPManager::selectMapRange(float x_center, float y_center, float z_center, float x_length, float y_length, float z_length, pcl::PointCloud<PointXYZ>::Ptr& result){
     pcl::PassThrough<PointXYZ> pass;
-    static PointCloud<PointXYZ>::Ptr _x_filted(new PointCloud<PointXYZ>), 
-                                    _y_filted(new PointCloud<PointXYZ>);
+    pcl::VoxelGrid<PointXYZ> down;
+    StatisticalOutlierRemoval<PointXYZ> noise_filter;
 
     // std::cout << "filtering: " << "x=" << x_center << ", y=" << y_center << ", z=" << z_center << std::endl;
     // filtering X axis
     pass.setInputCloud(map_cloud);
     pass.setFilterFieldName("x");
     pass.setFilterLimits(x_center - x_length/2, x_center + x_length/2);
-    pass.filter(*_x_filted);
+    pass.filter(*result);
     // filtering Y axis
-    pass.setInputCloud(_x_filted);
+    pass.setInputCloud(result);
     pass.setFilterFieldName("y");
     pass.setFilterLimits(y_center - y_length/2, y_center + y_length/2);
-    pass.filter(*_y_filted);
+    pass.filter(*result);
     // filtering Z axis
-    pass.setInputCloud(_y_filted);
+    pass.setInputCloud(result);
     pass.setFilterFieldName("z");
     pass.setFilterLimits(z_center - z_length/2, z_center + z_length/2);
     pass.filter(*result);
     // std::cout << "passthough done" << std::endl;
     std::cout << result->width << std::endl; 
+    noise_filter.setInputCloud(result);
+    noise_filter.setMeanK(64);
+    noise_filter.setStddevMulThresh(1.0);
+    noise_filter.filter(*result);
+    down.setInputCloud(result);
+    down.setLeafSize(0.1, 0.1, 0.1);
+    down.filter(*result);
+    std::cout << result->width << std::endl;
     return;
 
 }
@@ -94,13 +102,20 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
 void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output){
     pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
     pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
+    pcl::PassThrough<PointXYZ> pass;
     noise_filter.setInputCloud(input);
     noise_filter.setMeanK(64);
     noise_filter.setStddevMulThresh(1.0);
     noise_filter.filter(*output);
-    // grid_filter.setInputCloud(output);
-    // grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
-    // grid_filter.filter(*output);
+    grid_filter.setInputCloud(output);
+    grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
+    grid_filter.filter(*output);
+    pass.setInputCloud(output);
+    pass.setFilterFieldName("y");
+    pass.setFilterLimits(-3, 3);
+    pass.setNegative(true);
+    pass.filter(*output);
+
 }
 
 void ICPManager::groundFilter(float zmin, float zmax, PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output){

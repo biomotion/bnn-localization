@@ -19,9 +19,10 @@ int main(int argc, char** argv){
     ros::NodeHandle n("~");
     ros::Publisher pub_pose = n.advertise<geometry_msgs::PoseStamped>("/car_pose", 1);
     ros::Publisher pub_points = n.advertise<sensor_msgs::PointCloud2>("/points_transformed", 1);
+    ros::Publisher pub_imu = n.advertise<sensor_msgs::Imu>("/imu/data", 1);
     rosbag::Bag bag;
     rosbag::View view;
-    std::string bag_file, map_file;
+    std::string bag_file, map_file, car_frame, lidar_frame;
     double max_dist=10, tf_epsilon=1e-10, fit_epsilon=0.001;
     int max_iter=100;
 
@@ -33,6 +34,8 @@ int main(int argc, char** argv){
     n.param<double>("max_distance", max_dist, 10);
     n.param<double>("transform_epsilon", tf_epsilon, 1e-10);
     n.param<double>("fitness_epsilon", fit_epsilon, 0.001);
+    n.param<std::string>("car_frame_id", car_frame, "base_link");
+    n.param<std::string>("lidar_frame_id", lidar_frame, "velodyne");
     // cout << max_iter << endl
     //     << max_dist << endl
     //     << tf_epsilon << endl
@@ -45,8 +48,8 @@ int main(int argc, char** argv){
     tf::StampedTransform t_base2lidar;
     Eigen::Matrix4d eig_tf_base2lidar = Eigen::Matrix4d::Identity();
     try{
-        listener.waitForTransform("/base_link", "/velodyne", ros::Time(0), ros::Duration(1.0));
-        listener.lookupTransform("/base_link", "/velodyne",  
+        listener.waitForTransform(car_frame, lidar_frame, ros::Time(0), ros::Duration(1.0));
+        listener.lookupTransform(car_frame, lidar_frame,  
                                ros::Time(0), t_base2lidar);
         Eigen::Quaterniond r;
         Eigen::Vector3d t;
@@ -63,7 +66,7 @@ int main(int argc, char** argv){
     for (const rosbag::MessageInstance& msg : view){
         if(!ros::ok()) break;
         static Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
-        static Eigen::Vector3d staged_gps = Eigen::Vector3d::Identity();
+        static Eigen::Vector3d staged_gps = Eigen::Vector3d::Zero();
         cout << "topic|type: " << msg.getTopic() << "|" << msg.getDataType() << endl;
 
         tf2_msgs::TFMessage::ConstPtr tfs = msg.instantiate<tf2_msgs::TFMessage>();
@@ -74,6 +77,7 @@ int main(int argc, char** argv){
 
         sensor_msgs::Imu::ConstPtr imu = msg.instantiate<sensor_msgs::Imu>();
         if(imu != nullptr){
+            pub_imu.publish(imu);
             if(!pose.topLeftCorner(3, 3).isApprox(Eigen::Matrix3d::Identity())) continue;
             Eigen::Quaterniond imu_orient(imu->orientation.w,
                                     imu->orientation.x,
@@ -99,12 +103,13 @@ int main(int argc, char** argv){
         //handle point cloud topic
         sensor_msgs::PointCloud2::ConstPtr pc = msg.instantiate<sensor_msgs::PointCloud2>();
         if(pc != nullptr){
+            if(staged_gps.isApprox(Eigen::Vector3d::Zero())) continue;
             sensor_msgs::PointCloud2 pc_on_base, pc_out;
             PointCloud<PointXYZ>::Ptr input_cloud(new PointCloud<PointXYZ>);
 
             pcl_ros::transformPointCloud(eig_tf_base2lidar.cast<float>(), *pc, pc_on_base);
             pcl::fromROSMsg(pc_on_base, *input_cloud);
-
+            cout << input_cloud->width << endl;
             if(pose.isApprox(Eigen::Matrix4d::Identity())){
                 // First Aligning
                 double min_score = 1e200;
@@ -116,8 +121,8 @@ int main(int argc, char** argv){
                     manager.guessOrientation(try_orient);
                     manager.guessPosition(staged_gps);
                     manager.feedPC(input_cloud);
-                    if(manager.getLastScore(1.0f)<min_score){
-                        min_score = manager.getLastScore(1.0f);
+                    if(manager.getLastScore(1.4f)<min_score){
+                        min_score = manager.getLastScore(1.4f);
                         best_orient = manager.getPose().topLeftCorner(3, 3);
                         best_gps = manager.getPose().topRightCorner(3, 1);
                         ROS_WARN("Better score");

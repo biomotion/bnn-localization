@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="map_path" value="/bags/itri/map.pcd" />
-    <arg name="bag_path" value="/bags/itri/ITRI_Private_3.bag" />
+    <arg name="map_path" value="/bags/nuscenes/nuscenes.pcd" />
+    <arg name="bag_path" value="/bags/nuscenes/Nu_Private_1_lite.bag" />
 
-    <node pkg="tf" type="static_transform_publisher" name="base_to_lidar_publisher" args="0.46 0 3.46 -0.0051505 0.018102 -0.019207 0.99964 base_link velodyne 100" />
+    <node pkg="tf" type="static_transform_publisher" name="base_to_lidar_publisher" args="0.985793 0 1.84019 -0.015301 0.0173975 -0.707085 0.706749 car nuscenes_lidar 100" />
     
     <node name="serial_icp_node" pkg="icp_localization" type="serial_icp" output="screen">
+        <param name="lidar_frame_id" type="string" value="nuscenes_lidar" />
+        <param name="car_frame_id" type="string" value="car" />
         <param name="bag_file" type="string" value="$(arg bag_path)" />
         <param name="map_file" type="string" value="$(arg map_path)" />
         <param name="max_iter" type="int" value="150" />
