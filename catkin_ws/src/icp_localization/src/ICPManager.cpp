@@ -91,10 +91,10 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
     noise_filter.setMeanK(64);
     noise_filter.setStddevMulThresh(1.0);
     noise_filter.filter(*result);
-    down.setInputCloud(result);
-    down.setLeafSize(0.1, 0.1, 0.1);
-    down.filter(*result);
-    std::cout << result->width << std::endl;
+    // down.setInputCloud(result);
+    // down.setLeafSize(0.1, 0.1, 0.1);
+    // down.filter(*result);
+    // std::cout << result->width << std::endl;
     return;
 
 }
@@ -107,14 +107,14 @@ void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<Po
     noise_filter.setMeanK(64);
     noise_filter.setStddevMulThresh(1.0);
     noise_filter.filter(*output);
-    grid_filter.setInputCloud(output);
-    grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
-    grid_filter.filter(*output);
-    pass.setInputCloud(output);
-    pass.setFilterFieldName("y");
-    pass.setFilterLimits(-3, 3);
-    pass.setNegative(true);
-    pass.filter(*output);
+    // grid_filter.setInputCloud(output);
+    // grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
+    // grid_filter.filter(*output);
+    // pass.setInputCloud(output);
+    // pass.setFilterFieldName("y");
+    // pass.setFilterLimits(-3, 0);
+    // pass.setNegative(true);
+    // pass.filter(*output);
 
 }
 

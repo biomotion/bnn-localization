@@ -121,8 +121,8 @@ int main(int argc, char** argv){
                     manager.guessOrientation(try_orient);
                     manager.guessPosition(staged_gps);
                     manager.feedPC(input_cloud);
-                    if(manager.getLastScore(1.4f)<min_score){
-                        min_score = manager.getLastScore(1.4f);
+                    if(manager.getLastScore(1.0)<min_score){
+                        min_score = manager.getLastScore(1.0);
                         best_orient = manager.getPose().topLeftCorner(3, 3);
                         best_gps = manager.getPose().topRightCorner(3, 1);
                         ROS_WARN("Better score");
