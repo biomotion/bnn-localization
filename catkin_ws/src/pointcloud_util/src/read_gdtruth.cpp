@@ -65,12 +65,12 @@ void read_gdtruth::gd_cb(sensor_msgs::PointCloud2 msg)
         transform.setOrigin(tf::Vector3(data[1], data[2], data[3]));
         q.setRPY(data[6], data[5], data[4]);
         transform.setRotation(q);
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "velodyne"));
-        //msg.header.stamp = ros::Time::now();
-        //lidar_pub.publish(msg);
         pcl::toROSMsg(*cloud, output);
         output.header.frame_id = "map";
         map_pub.publish(output); /////////////////
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", "velodyne"));
+        //msg.header.stamp = ros::Time::now();
+        //lidar_pub.publish(msg);
     }
 }
 
