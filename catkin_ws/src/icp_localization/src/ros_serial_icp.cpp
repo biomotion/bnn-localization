@@ -82,8 +82,8 @@ int main(int argc, char** argv){
                                     imu->orientation.z);
             // Eigen::Quaterniond t;
             // tf::quaternionTFToEigen(t_base2lidar.getRotation(), t);
-            manager.guessOrientation(imu_orient);
-            cout << "guess imu: \n" << imu_orient.toRotationMatrix() << endl;
+            // manager.guessOrientation(imu_orient);
+            // cout << "guess imu: \n" << imu_orient.toRotationMatrix() << endl;
         }
 
 
