@@ -51,9 +51,9 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
             first_icp.setInputTarget(inputTarget);
             for(uint8_t i=0; i<36; i++){
                 first_icp.align(final_cloud, first_guess);
-                std::cout << (int)i << "guess score:" << first_icp.getFitnessScore() <<  std::endl;
-                if(first_icp.getFitnessScore()<min_score){
-                    min_score = first_icp.getFitnessScore();
+                std::cout << (int)i << "guess score:" << first_icp.getFitnessScore(1.0f) <<  std::endl;
+                if(first_icp.getFitnessScore(1.0f)<min_score){
+                    min_score = first_icp.getFitnessScore(1.0f);
                     best_guess = first_guess;
                     std::cout << "better result" << std::endl;
                 }
