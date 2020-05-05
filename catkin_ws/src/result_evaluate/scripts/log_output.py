@@ -36,6 +36,7 @@ def on_shutdown():
 if __name__ == "__main__":
     rospy.init_node("log_csv_node")
 
+    # sub_pose = rospy.Subscriber("/car_combine", PoseStamped, pose_cb)
     sub_pose = rospy.Subscriber("/car_pose", PoseStamped, pose_cb)
     rospy.on_shutdown(on_shutdown)
     rospy.spin()

@@ -40,7 +40,8 @@ void ICPManager::feedPC(pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud){
         gs = pose;
         Eigen::Vector3d point = gs.topRightCorner(3, 1);
         pcl::PointCloud<PointXYZ>::Ptr inputTarget(new pcl::PointCloud<pcl::PointXYZ>);
-        this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
+        // this->selectMapRange(point(0), point(1), point(2), 50, 50, 30, inputTarget);
+        this->selectMapRange(point(0), point(1), point(2), 500, 500, 90, inputTarget);
         icp.setInputSource(input_processed);
         icp.setInputTarget(inputTarget);
     }
@@ -102,7 +103,7 @@ void ICPManager::selectMapRange(float x_center, float y_center, float z_center, 
 void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<PointXYZ>::Ptr output){
     pcl::VoxelGrid<pcl::PointXYZ> grid_filter;
     pcl::StatisticalOutlierRemoval<pcl::PointXYZ> noise_filter;
-    pcl::PassThrough<PointXYZ> pass;
+    pcl::PassThrough<PointXYZ> road_filter;
     noise_filter.setInputCloud(input);
     noise_filter.setMeanK(64);
     noise_filter.setStddevMulThresh(1.0);
@@ -110,11 +111,11 @@ void ICPManager::pointsPreCompute(PointCloud<PointXYZ>::Ptr input, PointCloud<Po
     // grid_filter.setInputCloud(output);
     // grid_filter.setLeafSize(0.1f, 0.1f, 0.1f);
     // grid_filter.filter(*output);
-    // pass.setInputCloud(output);
-    // pass.setFilterFieldName("y");
-    // pass.setFilterLimits(-3, 0);
-    // pass.setNegative(true);
-    // pass.filter(*output);
+    road_filter.setInputCloud(output);
+    road_filter.setFilterFieldName("y");
+    road_filter.setFilterLimits(-9, 20);
+    road_filter.setNegative(true);
+    road_filter.filter(*output);
 
 }
 
