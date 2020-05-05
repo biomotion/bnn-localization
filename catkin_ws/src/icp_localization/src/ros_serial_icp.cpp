@@ -116,7 +116,7 @@ int main(int argc, char** argv){
                 Eigen::Matrix3d try_orient=Eigen::Matrix3d::Identity(), best_orient;
                 Eigen::Vector3d best_gps;
                 manager.setParams(2, 1e-10, 1e-5, 20);
-                for(int i=1; i<37; i++){
+                for(int i=1; i<73; i++){
                     cout << "trying #" << i << endl;
                     manager.guessOrientation(try_orient);
                     manager.guessPosition(staged_gps);
@@ -128,7 +128,7 @@ int main(int argc, char** argv){
                         ROS_WARN("Better score");
                     }
                     // rotate for next try
-                    try_orient = Eigen::AngleAxisd(M_PI/18, Eigen::Vector3d::UnitZ()) * try_orient;
+                    try_orient = Eigen::AngleAxisd(M_PI/36, Eigen::Vector3d::UnitZ()) * try_orient;
 
                     pose = manager.getPose();
                     pcl_ros::transformPointCloud(pose.cast<float>(), pc_on_base, pc_out);
