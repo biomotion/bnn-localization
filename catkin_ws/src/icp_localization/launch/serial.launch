@@ -14,6 +14,8 @@
         <param name="max_distance" type="double" value="1.0" />
         <param name="transform_epsilon" type="double" value="1e-10" />
         <param name="fitness_epsilon" type="double" value="1e-5" />
+        <param name="error_thres" type="double" value="1.0" />
+
     </node>
 
 

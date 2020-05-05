@@ -23,7 +23,7 @@ int main(int argc, char** argv){
     rosbag::Bag bag;
     rosbag::View view;
     std::string bag_file, map_file, car_frame, lidar_frame;
-    double max_dist=10, tf_epsilon=1e-10, fit_epsilon=0.001;
+    double max_dist=10, tf_epsilon=1e-10, fit_epsilon=0.001, error_thres;
     int max_iter=100;
 
     n.param<std::string>("map_file", map_file, "/bags/itri/map.pcd");
@@ -34,6 +34,7 @@ int main(int argc, char** argv){
     n.param<double>("max_distance", max_dist, 10);
     n.param<double>("transform_epsilon", tf_epsilon, 1e-10);
     n.param<double>("fitness_epsilon", fit_epsilon, 0.001);
+    n.param<double>("error_thres", error_thres, 1.0);
     n.param<std::string>("car_frame_id", car_frame, "base_link");
     n.param<std::string>("lidar_frame_id", lidar_frame, "velodyne");
     // cout << max_iter << endl
@@ -121,8 +122,8 @@ int main(int argc, char** argv){
                     manager.guessOrientation(try_orient);
                     manager.guessPosition(staged_gps);
                     manager.feedPC(input_cloud);
-                    if(manager.getLastScore(1.0)<min_score){
-                        min_score = manager.getLastScore(1.0);
+                    if(manager.getLastScore(error_thres)<min_score){
+                        min_score = manager.getLastScore(error_thres);
                         best_orient = manager.getPose().topLeftCorner(3, 3);
                         best_gps = manager.getPose().topRightCorner(3, 1);
                         ROS_WARN("Better score");
