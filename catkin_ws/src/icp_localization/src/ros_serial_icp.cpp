@@ -140,6 +140,7 @@ int main(int argc, char** argv){
 
             }
 
+            manager.setParams(max_dist, tf_epsilon, fit_epsilon, max_iter);
             manager.feedPC(input_cloud);
             pose = manager.getPose();
             pcl_ros::transformPointCloud(pose.cast<float>(), pc_on_base, pc_out);
