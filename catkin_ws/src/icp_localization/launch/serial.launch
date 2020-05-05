@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="map_path" value="/bags/nuscenes/map.pcd" />
-    <arg name="bag_path" value="/bags/nuscenes/Nu_Private_1_lite.bag" />
+
+    <arg name="map_path" value="/bags/filtered_map.pcd" />
+    <arg name="bag_path" value="/bags/nuscenes/Nu_Private_3_lite.bag" />
+
 
     <node pkg="tf" type="static_transform_publisher" name="base_to_lidar_publisher" args="0.985793 0 1.84019 -0.015301 0.0173975 -0.707085 0.706749 car nuscenes_lidar 100" />
     
@@ -10,7 +12,7 @@
         <param name="car_frame_id" type="string" value="car" />
         <param name="bag_file" type="string" value="$(arg bag_path)" />
         <param name="map_file" type="string" value="$(arg map_path)" />
-        <param name="max_iter" type="int" value="150" />
+        <param name="max_iter" type="int" value="100" />
         <param name="max_distance" type="double" value="1.0" />
         <param name="transform_epsilon" type="double" value="1e-10" />
         <param name="fitness_epsilon" type="double" value="1e-5" />

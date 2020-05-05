@@ -92,10 +92,18 @@ int main(int argc, char** argv){
         
         geometry_msgs::PointStamped::ConstPtr gps = msg.instantiate<geometry_msgs::PointStamped>();;
         if(gps != nullptr){
-            if(!pose.topRightCorner(3, 1).isApprox(Eigen::Vector3d::Zero())) continue;
             Eigen::Vector3d trans(gps->point.x,
                                 gps->point.y,
                                 gps->point.z);
+            if(!pose.topRightCorner(3, 1).isApprox(Eigen::Vector3d::Zero())){
+                if((pose.topRightCorner(3, 1)-trans).norm() > 1.2){
+                    ROS_WARN("GPS Too Far");
+                    staged_gps = trans;
+                }else{
+                    continue;
+                }
+            } 
+
             // manager.guessPosition(trans);
             // cout << "guess gps: \n" << trans << endl;
             staged_gps = trans;
@@ -111,13 +119,15 @@ int main(int argc, char** argv){
             pcl_ros::transformPointCloud(eig_tf_base2lidar.cast<float>(), *pc, pc_on_base);
             pcl::fromROSMsg(pc_on_base, *input_cloud);
             cout << input_cloud->width << endl;
-            if(pose.isApprox(Eigen::Matrix4d::Identity())){
+            if(pose.isApprox(Eigen::Matrix4d::Identity()) || staged_gps.isApprox(Eigen::Vector3d::Zero())){
                 // First Aligning
+                ROS_WARN("Finding First Orientation");
                 double min_score = 1e200;
                 Eigen::Matrix3d try_orient=Eigen::Matrix3d::Identity(), best_orient;
                 Eigen::Vector3d best_gps;
-                manager.setParams(2, 1e-10, 1e-5, 20);
-                for(int i=1; i<73; i++){
+
+                manager.setParams(1.2, 1e-10, 1e-5, 40);
+                for(int i=1; i<37; i++){
                     cout << "trying #" << i << endl;
                     manager.guessOrientation(try_orient);
                     manager.guessPosition(staged_gps);

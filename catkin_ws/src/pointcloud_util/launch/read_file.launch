@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="map_path" value="/bags/nuscenes/map.pcd" />
+    <arg name="map_path" value="/bags/filtered_map.pcd" />
     <node pkg="pointcloud_util" type="read_file" name="read_file_node" output="screen">
         <param name="file" type="string" value="$(arg map_path)" />
     </node>
